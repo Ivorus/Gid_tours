@@ -3,58 +3,42 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Guide Israel — Экскурсии</title>
+  <title>Экскурсии</title>
   <style>
     :root{
-      --bg:#0b0c10;
-      --card:#11131a;
-      --card2:#0f1016;
-      --border:#24273a;
-      --text:#e9ecff;
-      --muted:#a7acc7;
-      --accent:#4f6ef7;
-      --accent2:#7c4dff;
-      --ok:#00e676;
-      --warn:#ff9500;
-      --danger:#ff4757;
-      --radius:18px;
+      --bg:#0b0c10; --card:#11131a; --border:#24273a;
+      --text:#e9ecff; --muted:#a7acc7;
+      --accent:#4f6ef7; --accent2:#7c4dff;
+      --radius:18px; --logo:40px; --imgH:190px; --btnH:44px;
     }
     *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;background:radial-gradient(1200px 600px at 20% 0%, rgba(79,110,247,.22), transparent 60%),
-          radial-gradient(900px 500px at 80% 20%, rgba(124,77,255,.18), transparent 55%),
-          var(--bg); color:var(--text)}
-    a{color:inherit}
+    body{
+      margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(79,110,247,.22), transparent 60%),
+        radial-gradient(900px 500px at 80% 20%, rgba(124,77,255,.18), transparent 55%),
+        var(--bg);
+      color:var(--text)
+    }
     .topbar{
       position:sticky;top:0;z-index:20;
       backdrop-filter: blur(12px);
       background: rgba(11,12,16,.55);
       border-bottom:1px solid rgba(36,39,58,.7);
     }
-    .wrap{max-width:1120px;margin:0 auto;padding:18px}
+    .wrap{max-width:1120px;margin:0 auto;padding:16px}
     .row{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
     .brand{display:flex;gap:12px;align-items:center}
     .logo{
-      width:40px;height:40px;border-radius:14px;
+      width:var(--logo);height:var(--logo);border-radius:14px;
       background: linear-gradient(135deg,var(--accent),var(--accent2));
       box-shadow: 0 10px 30px rgba(79,110,247,.22);
+      flex:0 0 auto;
     }
     .title{font-weight:900;letter-spacing:.2px}
     .subtitle{color:var(--muted);font-size:13px;margin-top:2px}
-
-    .controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .pill{
-      border:1px solid var(--border);
-      background:rgba(17,19,26,.75);
-      border-radius:999px;
-      padding:8px 12px;
-      cursor:pointer;
-      color:var(--text);
-      font-size:13px;
-      user-select:none;
-    }
-    .pill.active{border-color:rgba(79,110,247,.7); box-shadow: 0 0 0 4px rgba(79,110,247,.12) inset}
     .search{
-      min-width:260px;
+      width:min(420px, 100%);
       border:1px solid var(--border);
       background:rgba(17,19,26,.75);
       border-radius:999px;
@@ -63,11 +47,11 @@
       outline:none;
     }
     .hero{
-      margin-top:14px;
+      margin-top:12px;
       border:1px solid rgba(36,39,58,.7);
       background: linear-gradient(180deg, rgba(17,19,26,.85), rgba(15,16,22,.7));
       border-radius: var(--radius);
-      padding:16px;
+      padding:14px;
       display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap;
     }
     .hero b{font-size:18px}
@@ -75,9 +59,11 @@
     .cta{
       background:linear-gradient(135deg,var(--accent),var(--accent2));
       border:0;color:white;
-      padding:10px 14px;border-radius:999px;
-      cursor:pointer;font-weight:700;
+      height:var(--btnH);
+      padding:0 14px;border-radius:999px;
+      cursor:pointer;font-weight:800;
       box-shadow: 0 12px 30px rgba(79,110,247,.22);
+      white-space:nowrap;
     }
 
     .grid{
@@ -93,17 +79,8 @@
       overflow:hidden;
       box-shadow: 0 18px 40px rgba(0,0,0,.22);
     }
-    .media{
-      position:relative;
-      height:190px;
-      background: rgba(255,255,255,.05);
-    }
-    .media img{
-      width:100%;height:100%;
-      object-fit:cover;
-      display:block;
-      filter:saturate(1.02) contrast(1.02);
-    }
+    .media{position:relative;height:var(--imgH);background: rgba(255,255,255,.05)}
+    .media img{width:100%;height:100%;object-fit:cover;display:block}
     .badge{
       position:absolute;left:12px;top:12px;
       background:rgba(15,16,22,.75);
@@ -112,55 +89,23 @@
       padding:6px 10px;
       font-size:12px;color:var(--muted)
     }
-    .dots{
-      position:absolute;right:12px;bottom:12px;
-      display:flex;gap:6px;align-items:center;
-      background:rgba(15,16,22,.55);
-      border:1px solid rgba(36,39,58,.6);
-      border-radius:999px;
-      padding:6px 8px;
-    }
-    .dot{
-      width:6px;height:6px;border-radius:50%;
-      background:rgba(167,172,199,.35);
-    }
-    .dot.active{background:white}
-
     .content{padding:14px}
     .h{font-weight:900;font-size:16px;line-height:1.2}
     .muted{color:var(--muted)}
-    .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
-    .chip{
-      font-size:12px;
-      border:1px solid rgba(36,39,58,.75);
-      background: rgba(15,16,22,.55);
-      border-radius:999px;
-      padding:6px 10px;
-      color:var(--muted);
-    }
     .actions{display:flex;gap:10px;margin-top:12px}
     .btn{
       flex:1;
+      height:var(--btnH);
       background:rgba(79,110,247,.16);
       border:1px solid rgba(79,110,247,.35);
       color:var(--text);
-      padding:10px 12px;border-radius:12px;
-      cursor:pointer;font-weight:700;
+      border-radius:12px;
+      cursor:pointer;font-weight:800;
     }
-    .btn.primary{
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      border:0;color:white;
-    }
+    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:white}
 
-    /* Modal */
-    .overlay{
-      position:fixed;inset:0;
-      background:rgba(0,0,0,.6);
-      display:none;
-      align-items:center;justify-content:center;
-      padding:16px;
-      z-index:50;
-    }
+    /* modal */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;align-items:center;justify-content:center;padding:14px;z-index:50}
     .modal{
       width:min(980px, 100%);
       border:1px solid rgba(36,39,58,.75);
@@ -169,73 +114,37 @@
       overflow:hidden;
       box-shadow: 0 30px 80px rgba(0,0,0,.5);
     }
-    .modalTop{
-      padding:14px 14px 0 14px;
-      display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
-    }
-    .close{
-      background:rgba(255,255,255,.06);
-      border:1px solid rgba(36,39,58,.75);
-      color:var(--text);
-      border-radius:12px;
-      padding:8px 10px;
-      cursor:pointer;
-    }
-    .modalBody{padding:14px;display:grid;grid-template-columns: 1.2fr .8fr;gap:14px}
-    @media (max-width: 900px){
-      .modalBody{grid-template-columns:1fr}
-      .search{min-width:180px}
-    }
-    .gallery{
-      border:1px solid rgba(36,39,58,.7);
-      border-radius:18px;
-      overflow:hidden;
-      background: rgba(255,255,255,.04);
-    }
+    .modalTop{padding:14px 14px 0 14px;display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .close{background:rgba(255,255,255,.06);border:1px solid rgba(36,39,58,.75);color:var(--text);border-radius:12px;padding:8px 10px;cursor:pointer}
+    .modalBody{padding:14px;display:grid;grid-template-columns:1.2fr .8fr;gap:14px}
+    .gallery{border:1px solid rgba(36,39,58,.7);border-radius:18px;overflow:hidden;background: rgba(255,255,255,.04)}
     .galleryMain{height:320px}
     .galleryMain img{width:100%;height:100%;object-fit:cover;display:block}
-    .thumbs{
-      display:flex;gap:8px;overflow:auto;
-      padding:10px;border-top:1px solid rgba(36,39,58,.7);
-      background: rgba(15,16,22,.55);
-    }
-    .thumb{
-      width:86px;height:56px;border-radius:12px;overflow:hidden;flex:0 0 auto;
-      border:1px solid rgba(36,39,58,.7);
-      cursor:pointer;opacity:.75
-    }
+    .thumbs{display:flex;gap:8px;overflow:auto;padding:10px;border-top:1px solid rgba(36,39,58,.7);background: rgba(15,16,22,.55)}
+    .thumb{width:86px;height:56px;border-radius:12px;overflow:hidden;flex:0 0 auto;border:1px solid rgba(36,39,58,.7);cursor:pointer;opacity:.75}
     .thumb.active{opacity:1;border-color:rgba(79,110,247,.7)}
     .thumb img{width:100%;height:100%;object-fit:cover;display:block}
-
-    .form{
-      border:1px solid rgba(36,39,58,.75);
-      border-radius:18px;
-      padding:12px;
-      background: rgba(17,19,26,.6);
-    }
+    .form{border:1px solid rgba(36,39,58,.75);border-radius:18px;padding:12px;background: rgba(17,19,26,.6)}
     label{display:block;margin:10px 0 6px;font-size:13px;color:var(--muted)}
-    input,select,textarea{
-      width:100%;
-      padding:10px;
-      border-radius:12px;
-      border:1px solid rgba(36,39,58,.85);
-      background: rgba(15,16,22,.75);
-      color:var(--text);
-      outline:none;
-    }
-    textarea{resize:vertical}
+    input,select,textarea{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(36,39,58,.85);background: rgba(15,16,22,.75);color:var(--text);outline:none}
     .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .send{
-      margin-top:12px;width:100%;
-      background:linear-gradient(135deg,var(--accent),var(--accent2));
-      border:0;color:white;
-      padding:11px 12px;border-radius:12px;
-      cursor:pointer;font-weight:800;
-    }
+    .send{margin-top:12px;width:100%;height:var(--btnH);background:linear-gradient(135deg,var(--accent),var(--accent2));border:0;color:white;border-radius:12px;cursor:pointer;font-weight:900}
     .note{font-size:12px;color:var(--muted);margin-top:10px}
 
-    /* RTL for HE */
-    .rtl{direction:rtl;text-align:right}
+    /* ✅ Mobile */
+    @media (max-width: 900px){
+      .modalBody{grid-template-columns:1fr}
+      .galleryMain{height:240px}
+      .thumb{width:78px;height:52px}
+    }
+    @media (max-width: 520px){
+      .wrap{padding:12px}
+      .grid{grid-template-columns:1fr}
+      .media{height:200px}
+      .actions{flex-direction:column}
+      .btn{width:100%}
+      .hero b{font-size:16px}
+    }
   </style>
 </head>
 
@@ -246,16 +155,11 @@
         <div class="brand">
           <div class="logo"></div>
           <div>
-            <div class="title">Guide Israel</div>
+            <div class="title" id="brandName">Guide Israel</div>
             <div class="subtitle" id="subtitle">Экскурсии по Израилю • запись онлайн</div>
           </div>
         </div>
-
-        <div class="controls">
-          <input id="search" class="search" placeholder="Поиск: Иерусалим, Мёртвое море..." />
-          <div class="pill active" id="btnRU">RU</div>
-          <div class="pill" id="btnHE">HE</div>
-        </div>
+        <input id="search" class="search" placeholder="Поиск: Иерусалим, Мёртвое море..." />
       </div>
 
       <div class="hero">
@@ -272,57 +176,45 @@
     <div id="list" class="grid"></div>
   </div>
 
-  <!-- MODAL -->
   <div class="overlay" id="overlay">
-    <div class="modal" role="dialog" aria-modal="true">
+    <div class="modal">
       <div class="modalTop">
         <div>
           <div class="h" id="mTitle"></div>
           <div class="muted" id="mDesc" style="margin-top:6px"></div>
-          <div class="meta" style="margin-top:10px">
-            <div class="chip" id="mPrice"></div>
-            <div class="chip" id="mDur"></div>
-          </div>
+          <div class="muted" id="mMeta" style="margin-top:10px"></div>
         </div>
         <button class="close" id="closeBtn">✕</button>
       </div>
 
       <div class="modalBody">
         <div class="gallery">
-          <div class="galleryMain">
-            <img id="mainImg" alt="">
-          </div>
+          <div class="galleryMain"><img id="mainImg" alt=""></div>
           <div class="thumbs" id="thumbs"></div>
         </div>
 
         <div class="form">
-          <div class="muted" id="formTop">Заявка на экскурсию</div>
+          <div class="muted" style="font-weight:700">Заявка на экскурсию</div>
 
-          <label id="lName">Имя и фамилия</label>
+          <label>Имя и фамилия</label>
           <input id="name" placeholder="Например: Василий Иванов"/>
 
-          <label id="lPhone">Телефон (WhatsApp)</label>
+          <label>Телефон (WhatsApp)</label>
           <input id="phone" placeholder="+972..."/>
 
-          <label id="lDate">Дата и время</label>
+          <label>Дата и время</label>
           <input id="date" type="datetime-local"/>
 
           <div class="two">
             <div>
-              <label id="lPeople">Кол-во людей</label>
+              <label>Кол-во людей</label>
               <input id="people" type="number" min="1" value="1"/>
             </div>
             <div>
-              <label id="lLang">Язык</label>
-              <select id="lang">
-                <option value="RU">RU</option>
-                <option value="HE">HE</option>
-              </select>
+              <label>Комментарий</label>
+              <input id="comment" placeholder="По желанию"/>
             </div>
           </div>
-
-          <label id="lCom">Комментарий</label>
-          <textarea id="comment" rows="3" placeholder=""></textarea>
 
           <button class="send" id="sendBtn">Отправить заявку</button>
           <div class="note" id="result"></div>
@@ -332,81 +224,44 @@
   </div>
 
 <script>
-  let LANG = "RU";
   let TOURS = [];
   let CURRENT = null;
 
-  const T = {
-    RU: {
-      subtitle: "Экскурсии по Израилю • запись онлайн",
-      heroTitle: "Выберите экскурсию — и запишитесь за 1 минуту",
-      heroDesc: "После заявки мы подтверждаем запись и связываемся с вами.",
-      searchPH: "Поиск: Иерусалим, Мёртвое море...",
-      book: "Записаться",
-      details: "Подробнее",
-      formTop: "Заявка на экскурсию",
-      name: "Имя и фамилия",
-      phone: "Телефон (WhatsApp)",
-      date: "Дата и время",
-      people: "Кол-во людей",
-      lang: "Язык",
-      com: "Комментарий",
-      send: "Отправить заявку",
-      ok: "✅ Заявка отправлена! Мы свяжемся с вами для подтверждения. Номер: ",
-      err: "Ошибка: ",
-      empty: "Пока нет экскурсий. Админ добавляет их в /admin"
-    },
-    HE: {
-      subtitle: "סיורים בישראל • הרשמה אונליין",
-      heroTitle: "בחרו סיור — והירשמו בדקה",
-      heroDesc: "אחרי הבקשה נאשר וניצור קשר.",
-      searchPH: "חיפוש: ירושלים, ים המלח...",
-      book: "להירשם",
-      details: "פרטים",
-      formTop: "בקשה לסיור",
-      name: "שם מלא",
-      phone: "טלפון (WhatsApp)",
-      date: "תאריך ושעה",
-      people: "מספר אנשים",
-      lang: "שפה",
-      com: "הערה",
-      send: "שליחת בקשה",
-      ok: "✅ הבקשה נשלחה! נחזור אליכם לאישור. מספר: ",
-      err: "שגיאה: ",
-      empty: "אין סיורים כרגע. הוסיפו דרך /admin"
-    }
-  };
+  function setCSSVar(name, val){
+    if(val === undefined || val === null || val === "") return;
+    document.documentElement.style.setProperty(name, String(val));
+  }
 
-  function applyLang(){
-    document.getElementById("subtitle").textContent = T[LANG].subtitle;
-    document.getElementById("heroTitle").textContent = T[LANG].heroTitle;
-    document.getElementById("heroDesc").textContent = T[LANG].heroDesc;
-    document.getElementById("search").placeholder = T[LANG].searchPH;
-    document.getElementById("formTop").textContent = T[LANG].formTop;
+  async function loadTheme(){
+    const theme = await fetch("/api/theme").then(r=>r.json()).catch(()=> ({}));
 
-    document.getElementById("lName").textContent = T[LANG].name;
-    document.getElementById("lPhone").textContent = T[LANG].phone;
-    document.getElementById("lDate").textContent = T[LANG].date;
-    document.getElementById("lPeople").textContent = T[LANG].people;
-    document.getElementById("lLang").textContent = T[LANG].lang;
-    document.getElementById("lCom").textContent = T[LANG].com;
-    document.getElementById("sendBtn").textContent = T[LANG].send;
+    // apply text blocks
+    if(theme.brand_name) document.getElementById("brandName").textContent = theme.brand_name;
+    if(theme.subtitle) document.getElementById("subtitle").textContent = theme.subtitle;
+    if(theme.hero_title) document.getElementById("heroTitle").textContent = theme.hero_title;
+    if(theme.hero_desc) document.getElementById("heroDesc").textContent = theme.hero_desc;
 
-    document.body.classList.toggle("rtl", LANG==="HE");
+    // apply colors/sizes
+    setCSSVar("--bg", theme.bg);
+    setCSSVar("--card", theme.card);
+    setCSSVar("--border", theme.border);
+    setCSSVar("--text", theme.text);
+    setCSSVar("--muted", theme.muted);
+    setCSSVar("--accent", theme.accent);
+    setCSSVar("--accent2", theme.accent2);
 
-    document.getElementById("btnRU").classList.toggle("active", LANG==="RU");
-    document.getElementById("btnHE").classList.toggle("active", LANG==="HE");
+    if(Number.isFinite(Number(theme.radius))) setCSSVar("--radius", theme.radius + "px");
+    if(Number.isFinite(Number(theme.logo_size))) setCSSVar("--logo", theme.logo_size + "px");
+    if(Number.isFinite(Number(theme.card_image_h))) setCSSVar("--imgH", theme.card_image_h + "px");
+    if(Number.isFinite(Number(theme.btn_h))) setCSSVar("--btnH", theme.btn_h + "px");
   }
 
   function safeText(s){ return (s || "").toString(); }
-
   function firstPhoto(t){
-    // ✅ главное: поддержка photos[] (новая версия) + старые базы
     if (Array.isArray(t.photos) && t.photos.length) return t.photos[0];
-    if (t.image_url) return t.image_url; // на всякий случай, если осталось
+    if (t.image_url) return t.image_url;
     return "";
   }
-
   function priceChip(t){
     const p = Number(t.price_ils || 0);
     return p ? `₪${p}` : "₪—";
@@ -421,32 +276,26 @@
   function render(list){
     const el = document.getElementById("list");
     if(!list.length){
-      el.innerHTML = `<div class="card"><div class="content"><div class="muted">${T[LANG].empty}</div></div></div>`;
+      el.innerHTML = `<div class="card"><div class="content"><div class="muted">Пока нет экскурсий. Админ добавляет их в /admin</div></div></div>`;
       return;
     }
-
     el.innerHTML = list.map(t => {
       const cover = firstPhoto(t);
-      const title = (LANG==="HE") ? safeText(t.title_he) : safeText(t.title_ru);
-      const desc = (LANG==="HE") ? safeText(t.desc_he) : safeText(t.desc_ru);
-
-      const dotsCount = Array.isArray(t.photos) ? Math.min(5, t.photos.length) : 0;
+      const title = safeText(t.title_ru);
+      const desc = safeText(t.desc_ru);
 
       return `
         <div class="card">
           <div class="media">
             ${cover ? `<img src="${cover}" alt="">` : `<div style="height:100%;display:flex;align-items:center;justify-content:center;color:rgba(167,172,199,.7)">Нет фото</div>`}
             <div class="badge">${priceChip(t)} • ${durChip(t)}</div>
-            ${dotsCount>1 ? `<div class="dots">
-              ${Array.from({length:dotsCount}).map((_,i)=>`<span class="dot ${i===0?'active':''}"></span>`).join('')}
-            </div>` : ``}
           </div>
           <div class="content">
             <div class="h">${title || "—"}</div>
             <div class="muted" style="margin-top:8px;line-height:1.35">${desc ? desc.slice(0,140) + (desc.length>140 ? "…" : "") : ""}</div>
             <div class="actions">
-              <button class="btn" onclick="openTour('${t.id}', false)">${T[LANG].details}</button>
-              <button class="btn primary" onclick="openTour('${t.id}', true)">${T[LANG].book}</button>
+              <button class="btn" onclick="openTour('${t.id}')">Подробнее</button>
+              <button class="btn primary" onclick="openTour('${t.id}', true)">Записаться</button>
             </div>
           </div>
         </div>
@@ -457,7 +306,6 @@
   function setMainImage(url){
     const img = document.getElementById("mainImg");
     img.src = url || "";
-    img.style.display = url ? "block" : "none";
   }
 
   function renderThumbs(photos){
@@ -477,7 +325,6 @@
     const photos = (CURRENT && Array.isArray(CURRENT.photos)) ? CURRENT.photos : [];
     const url = photos[idx] || firstPhoto(CURRENT);
     setMainImage(url);
-
     document.querySelectorAll(".thumb").forEach((t,i)=> t.classList.toggle("active", i===idx));
   }
 
@@ -486,67 +333,48 @@
     if(!t) return;
     CURRENT = t;
 
-    const title = (LANG==="HE") ? safeText(t.title_he) : safeText(t.title_ru);
-    const desc  = (LANG==="HE") ? safeText(t.desc_he)  : safeText(t.desc_ru);
-
-    document.getElementById("mTitle").textContent = title;
-    document.getElementById("mDesc").textContent  = desc;
-    document.getElementById("mPrice").textContent = `💳 ${priceChip(t)}`;
-    document.getElementById("mDur").textContent   = durChip(t);
+    document.getElementById("mTitle").textContent = safeText(t.title_ru);
+    document.getElementById("mDesc").textContent  = safeText(t.desc_ru);
+    document.getElementById("mMeta").textContent  = `${priceChip(t)} • ${durChip(t)}`;
 
     const photos = Array.isArray(t.photos) && t.photos.length ? t.photos : (firstPhoto(t) ? [firstPhoto(t)] : []);
-    CURRENT.photos = photos; // ensure
+    CURRENT.photos = photos;
     setMainImage(photos[0] || "");
     renderThumbs(photos);
 
     document.getElementById("result").textContent = "";
     document.getElementById("overlay").style.display = "flex";
-
-    if(focusForm){
-      setTimeout(()=>document.getElementById("name").focus(), 50);
-    }
+    if(focusForm) setTimeout(()=>document.getElementById("name").focus(), 30);
   }
 
-  function closeModal(){
-    document.getElementById("overlay").style.display = "none";
-  }
-
+  function closeModal(){ document.getElementById("overlay").style.display = "none"; }
   document.getElementById("closeBtn").onclick = closeModal;
-  document.getElementById("overlay").addEventListener("click", (e)=>{
-    if(e.target.id === "overlay") closeModal();
-  });
+  document.getElementById("overlay").addEventListener("click", (e)=>{ if(e.target.id === "overlay") closeModal(); });
 
-  document.getElementById("btnRU").onclick = ()=>{ LANG="RU"; applyLang(); render(filterTours()); };
-  document.getElementById("btnHE").onclick = ()=>{ LANG="HE"; applyLang(); render(filterTours()); };
-
-  document.getElementById("scrollBtn").onclick = ()=>{
-    window.scrollTo({ top: 260, behavior: "smooth" });
-  };
-
-  function filterTours(){
-    const q = document.getElementById("search").value.trim().toLowerCase();
-    if(!q) return TOURS;
-    return TOURS.filter(t => {
-      const all = [
-        t.title_ru, t.title_he, t.desc_ru, t.desc_he
-      ].map(safeText).join(" ").toLowerCase();
-      return all.includes(q);
-    });
-  }
+  document.getElementById("scrollBtn").onclick = ()=> window.scrollTo({ top: 260, behavior: "smooth" });
 
   document.getElementById("search").addEventListener("input", ()=>{
-    render(filterTours());
+    const q = document.getElementById("search").value.trim().toLowerCase();
+    if(!q) return render(TOURS);
+    const filtered = TOURS.filter(t => (safeText(t.title_ru)+" "+safeText(t.desc_ru)).toLowerCase().includes(q));
+    render(filtered);
   });
 
   document.getElementById("sendBtn").onclick = async ()=>{
     if(!CURRENT) return;
+
+    // ✅ мгновенное сообщение + блок кнопки
+    const btn = document.getElementById("sendBtn");
+    btn.disabled = true;
+    btn.style.opacity = "0.7";
+    document.getElementById("result").textContent = "Отправляем заявку...";
+
     const payload = {
       tour_id: CURRENT.id,
       name: document.getElementById("name").value.trim(),
       phone: document.getElementById("phone").value.trim(),
       date_iso: new Date(document.getElementById("date").value).toISOString(),
       people: document.getElementById("people").value,
-      lang: document.getElementById("lang").value,
       comment: document.getElementById("comment").value
     };
 
@@ -556,20 +384,27 @@
       body: JSON.stringify(payload)
     });
     const data = await res.json().catch(()=> ({}));
+
     if(!res.ok){
-      document.getElementById("result").textContent = T[LANG].err + (data.error || "unknown");
+      document.getElementById("result").textContent = "Ошибка: " + (data.error || "unknown");
+      btn.disabled = false;
+      btn.style.opacity = "1";
       return;
     }
-    document.getElementById("result").textContent = T[LANG].ok + data.booking.id;
+
+    // ✅ сразу показать успех + закрыть через 2 сек
+    document.getElementById("result").textContent = "✅ Заявка отправлена! Номер: " + data.booking.id;
+    setTimeout(()=>{ closeModal(); }, 2000);
+
+    btn.disabled = false;
+    btn.style.opacity = "1";
   };
 
   async function load(){
-    const r = await fetch("/api/tours");
-    TOURS = await r.json();
-    applyLang();
+    await loadTheme();
+    TOURS = await fetch("/api/tours").then(r=>r.json());
     render(TOURS);
   }
-
   load();
 </script>
 </body>
