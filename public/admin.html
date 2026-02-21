@@ -3,91 +3,151 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Админ — заявки</title>
+  <title>Admin</title>
   <style>
     body{font-family:system-ui,Arial;margin:0;background:#0c0c10;color:#e8e8f0}
     .wrap{max-width:980px;margin:0 auto;padding:18px}
-    .card{background:#14141c;border:1px solid #222230;border-radius:14px;padding:14px;margin-bottom:12px}
-    input{width:100%;padding:10px;border-radius:10px;border:1px solid #222230;background:#0f0f16;color:#e8e8f0}
-    button{background:#4f6ef7;border:0;color:white;padding:9px 10px;border-radius:10px;cursor:pointer;margin-right:8px}
+    .card{background:#14141c;border:1px solid #222230;border-radius:14px;padding:14px;margin:12px 0}
+    input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #222230;background:#0f0f16;color:#e8e8f0}
+    button{background:#4f6ef7;border:0;color:white;padding:10px 12px;border-radius:10px;cursor:pointer}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
     .muted{color:#a6a8c0}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .status{padding:4px 8px;border:1px solid #222230;border-radius:999px;background:#0f0f16}
-    .error{color:#ff7b7b;margin-top:10px}
+    .err{color:#ff7b7b}
+    .pill{display:inline-block;border:1px solid #222230;border-radius:999px;padding:4px 10px;background:#0f0f16}
   </style>
 </head>
 <body>
 <div class="wrap">
-  <h2 style="margin:0 0 10px">Админка: заявки</h2>
-  <div class="muted">Введи ADMIN_TOKEN (на сервере) и нажми “Загрузить”.</div>
-  <div class="error" id="err"></div>
+  <h2 style="margin:0 0 8px">Админ-панель</h2>
+  <div class="muted">Вход для админа и сотрудников</div>
 
-  <div style="margin-top:10px">
-    <input id="token" placeholder="ADMIN_TOKEN"/>
-    <button id="load" style="margin-top:10px">Загрузить заявки</button>
+  <div id="loginBox" class="card">
+    <div class="err" id="err"></div>
+    <label>Email</label>
+    <input id="email" placeholder="admin@example.com">
+    <label>Пароль</label>
+    <input id="password" type="password">
+    <button id="login" style="margin-top:10px;width:100%">Войти</button>
   </div>
 
-  <div id="list" style="margin-top:14px"></div>
+  <div id="app" style="display:none">
+    <div class="card">
+      <div>Вы вошли как: <span class="pill" id="me"></span></div>
+      <button id="logout" style="margin-top:10px">Выйти</button>
+    </div>
+
+    <div class="card" id="staffBox" style="display:none">
+      <h3 style="margin:0 0 8px">Создать сотрудника (только ADMIN)</h3>
+      <div class="row">
+        <div>
+          <label>Email</label>
+          <input id="sEmail">
+        </div>
+        <div>
+          <label>Пароль</label>
+          <input id="sPass">
+        </div>
+      </div>
+      <label>Роль</label>
+      <select id="sRole">
+        <option value="staff">staff</option>
+        <option value="admin">admin</option>
+      </select>
+      <button id="createStaff" style="margin-top:10px">Создать</button>
+      <div class="muted" id="staffRes"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 8px">Добавить экскурсию</h3>
+      <div class="row">
+        <div>
+          <label>Название RU</label>
+          <input id="tr">
+        </div>
+        <div>
+          <label>Название HE</label>
+          <input id="th">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Описание RU</label>
+          <textarea id="dr" rows="3"></textarea>
+        </div>
+        <div>
+          <label>Описание HE</label>
+          <textarea id="dh" rows="3"></textarea>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Цена (ILS)</label>
+          <input id="price" type="number" min="0" value="0">
+        </div>
+        <div>
+          <label>Длительность (мин)</label>
+          <input id="dur" type="number" min="0" value="0">
+        </div>
+      </div>
+      <label>Ссылка на картинку (image_url)</label>
+      <input id="img" placeholder="https://...jpg / png / webp">
+      <label><input type="checkbox" id="active" checked> Активна</label>
+      <button id="addTour" style="margin-top:10px;width:100%">Сохранить</button>
+      <div class="muted" id="tourRes"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 8px">Экскурсии</h3>
+      <div id="tours" class="muted">загрузка...</div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin:0 0 8px">Заявки</h3>
+      <div id="bookings" class="muted">загрузка...</div>
+    </div>
+  </div>
 </div>
 
 <script>
-  function detectBase() {
-    const p = location.pathname;
-    const m = p.match(/^\/([^\/]+)\/public\/admin\.html/);
-    return m ? "/" + m[1] : "";
+const qs = (id)=>document.getElementById(id);
+
+async function api(url, method="GET", body){
+  const res = await fetch(url, {
+    method,
+    headers: body ? {"content-type":"application/json"} : undefined,
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(()=> ({}));
+  return { ok: res.ok, data };
+}
+
+async function refresh(){
+  const me = await api("/api/me");
+  if(!me.data.user){
+    qs("loginBox").style.display="block";
+    qs("app").style.display="none";
+    return;
   }
-  const BASE = detectBase();
-  const API = (path) => BASE + path;
+  qs("loginBox").style.display="none";
+  qs("app").style.display="block";
+  qs("me").textContent = `${me.data.user.email} (${me.data.user.role})`;
+  qs("staffBox").style.display = (me.data.user.role==="admin") ? "block" : "none";
 
-  async function fetchBookings() {
-    document.getElementById("err").textContent = "";
-    const token = document.getElementById("token").value.trim();
-    const res = await fetch(API("/api/admin/bookings?token=" + encodeURIComponent(token)));
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || "Unauthorized");
+  const tours = await api("/api/admin/tours");
+  qs("tours").innerHTML = (tours.data || []).map(t=>`
+    <div style="padding:10px;border:1px solid #222230;border-radius:12px;margin:8px 0">
+      <b>${t.title_ru}</b> / ${t.title_he}
+      <div class="muted">₪${t.price_ils} · ${t.duration_min} мин · active: ${t.is_active}</div>
+      <div class="muted">id: ${t.id}</div>
+      <button onclick="delTour('${t.id}')" style="margin-top:8px;background:#ff4757">Удалить</button>
+    </div>
+  `).join("") || "пусто";
 
-    const el = document.getElementById("list");
-    el.innerHTML = data.map(b => `
-      <div class="card">
-        <div class="row">
-          <div style="font-weight:800">${b.name}</div>
-          <div class="status">${b.status}</div>
-          <div class="muted">${new Date(b.created_at).toLocaleString()}</div>
-        </div>
-        <div style="margin-top:8px" class="muted">
-          ${b.tour ? (b.tour.title_ru + " / " + b.tour.title_he) : ""}
-        </div>
-        <div style="margin-top:6px">📞 ${b.phone} · 👥 ${b.adults} + ${b.kids}</div>
-        <div class="muted" style="margin-top:6px">${b.comment || ""}</div>
-        <div style="margin-top:10px">
-          <button onclick="setStatus('${b.id}','confirmed')">Подтвердить</button>
-          <button onclick="setStatus('${b.id}','declined')">Отклонить</button>
-          <button onclick="setStatus('${b.id}','paid')">Оплачено</button>
-        </div>
-      </div>
-    `).join("");
-  }
-
-  async function setStatus(id, status) {
-    const token = document.getElementById("token").value.trim();
-    const res = await fetch(API("/api/admin/bookings/" + id + "/status?token=" + encodeURIComponent(token)), {
-      method: "POST",
-      headers: {"content-type":"application/json"},
-      body: JSON.stringify({ status })
-    });
-    const data = await res.json();
-    if (!res.ok) { alert(data.error || "error"); return; }
-    fetchBookings();
-  }
-
-  window.setStatus = setStatus;
-
-  document.getElementById("load").onclick = () => {
-    fetchBookings().catch(e => {
-      document.getElementById("err").textContent =
-        "Ошибка: " + e.message + ". Проверь backend: " + API("/api/health");
-    });
-  };
-</script>
-</body>
-</html>
+  const bookings = await api("/api/admin/bookings");
+  qs("bookings").innerHTML = (bookings.data || []).map(b=>`
+    <div style="padding:10px;border:1px solid #222230;border-radius:12px;margin:8px 0">
+      <b>${b.name}</b> · ${b.phone} · 👥 ${b.people} · ${b.lang}
+      <div class="muted">${new Date(b.created_at).toLocaleString()} · дата: ${b.date_iso}</div>
+      <div class="muted">Экскурсия: ${b.tour ? b.tour.title_ru : b.tour_id}</div>
+      <div class="muted">Статус: <span class="pill">${b.status}</span></div>
+      <div st
