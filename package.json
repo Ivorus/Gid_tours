@@ -1,5 +1,5 @@
 {
-  "name": "israel-guide-booking",
+  "name": "guide-booking-admin",
   "version": "1.0.0",
   "private": true,
   "type": "commonjs",
@@ -7,6 +7,8 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "^4.19.2"
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2",
+    "express-session": "^1.17.3"
   }
 }
