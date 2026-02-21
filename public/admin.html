@@ -2,490 +2,913 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
   <title>Личный кабинет</title>
   <style>
-    body{font-family:system-ui,Arial;margin:0;background:#0c0c10;color:#e8e8f0}
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .card{background:#14141c;border:1px solid #222230;border-radius:14px;padding:14px;margin:12px 0}
-    input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #222230;background:#0f0f16;color:#e8e8f0}
-    button{background:#4f6ef7;border:0;color:white;padding:10px 12px;border-radius:10px;cursor:pointer}
-    .muted{color:#a6a8c0}
-    .err{color:#ff7b7b}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-    .tab{border:1px solid #222230;background:#0f0f16;border-radius:999px;padding:8px 12px;cursor:pointer}
-    .tab.active{background:#4f6ef7;border-color:#4f6ef7}
-    .pill{display:inline-block;border:1px solid #222230;border-radius:999px;padding:4px 10px;background:#0f0f16}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
-    img{width:100%;border-radius:12px;border:1px solid #222230;display:block}
-    .small{font-size:12px}
-    .danger{background:#ff4757}
-    .okbtn{background:#00e676;color:#0c0c10}
-    .warn{background:#ff9500}
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+      margin: 0;
+      background: #0c0c10;
+      color: #e8e8f0;
+      padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px));
+    }
+
+    /* ===== Scrollbar ===== */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: #0c0c10; }
+    ::-webkit-scrollbar-thumb { background: #222230; border-radius: 4px; }
+
+    /* ===== Layout ===== */
+    .wrap { max-width: 780px; margin: 0 auto; padding: 14px 14px 20px; }
+
+    /* ===== Cards ===== */
+    .card {
+      background: #14141c;
+      border: 1px solid #222230;
+      border-radius: 16px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    /* ===== Form elements ===== */
+    label {
+      display: block;
+      margin: 12px 0 5px;
+      font-size: 13px;
+      color: #8a8cb0;
+      font-weight: 500;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid #222230;
+      background: #0f0f16;
+      color: #e8e8f0;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input:focus, textarea:focus, select:focus { border-color: #4f6ef7; }
+    textarea { resize: vertical; }
+
+    /* ===== Buttons ===== */
+    button {
+      background: #4f6ef7;
+      border: 0;
+      color: white;
+      padding: 12px 18px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 700;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    button:active { opacity: 0.8; transform: scale(0.98); }
+    .danger { background: #ff4757; }
+    .okbtn  { background: #00e676; color: #0c0c10; }
+    .warn   { background: #ff9500; }
+    .ghost  { background: transparent; border: 1px solid #4f6ef7; color: #4f6ef7; }
+
+    /* ===== Helpers ===== */
+    .muted  { color: #8a8cb0; }
+    .err    { color: #ff7b7b; }
+    .small  { font-size: 12px; }
+    .pill {
+      display: inline-block;
+      border: 1px solid #222230;
+      border-radius: 999px;
+      padding: 3px 12px;
+      background: #0f0f16;
+      font-size: 12px;
+    }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    img { width: 100%; border-radius: 12px; border: 1px solid #222230; display: block; }
+
+    /* ===== Page header ===== */
+    .page-header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(12,12,16,0.92);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid #1e1e2a;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+    .page-header-title { font-size: 17px; font-weight: 800; }
+    .page-header-sub   { font-size: 12px; color: #8a8cb0; margin-top: 1px; }
+
+    /* ===== Tab content ===== */
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ===== Bottom navigation ===== */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      background: rgba(18,18,28,0.97);
+      backdrop-filter: blur(16px);
+      border-top: 1px solid #1e1e2a;
+      display: flex;
+      z-index: 100;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 4px 10px;
+      cursor: pointer;
+      color: #5a5c78;
+      transition: color 0.2s;
+      user-select: none;
+      gap: 3px;
+    }
+    .nav-item.active { color: #4f6ef7; }
+    .nav-item .ni-icon { font-size: 22px; line-height: 1; }
+    .nav-item .ni-label { font-size: 10px; font-weight: 600; }
+
+    /* ===== Toast ===== */
+    .toast {
+      position: fixed;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: #1e2a1e;
+      border: 1px solid #00e676;
+      color: #00e676;
+      padding: 12px 22px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      z-index: 200;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .toast.err-toast { background: #2a1e1e; border-color: #ff4757; color: #ff4757; }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ===== Login ===== */
+    .login-wrap {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .login-card {
+      background: #14141c;
+      border: 1px solid #222230;
+      border-radius: 20px;
+      padding: 32px 28px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .login-card h2 { margin: 0 0 6px; font-size: 22px; }
+    .login-logo {
+      width: 56px; height: 56px;
+      background: linear-gradient(135deg, #4f6ef7, #7c4dff);
+      border-radius: 16px;
+      margin: 0 auto 20px;
+      display: block;
+    }
+
+    /* ===== Tour card ===== */
+    .tour-cover {
+      width: 100%;
+      height: 170px;
+      border-radius: 12px;
+      object-fit: cover;
+      display: block;
+      border: 1px solid #222230;
+    }
+    .tour-cover-empty {
+      height: 170px;
+      border-radius: 12px;
+      border: 1px solid #222230;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #5a5c78;
+      font-size: 13px;
+      background: #0f0f16;
+    }
+    .actions-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+    .actions-row button { flex: 1; min-width: 80px; }
+
+    /* ===== Booking card ===== */
+    .booking-card { margin: 10px 0; }
+    .status-badge {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid;
+    }
+
+    /* ===== Design tab ===== */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .color-field { display: flex; flex-direction: column; gap: 5px; }
+    .color-field > span { font-size: 12px; color: #8a8cb0; }
+    .color-field input[type="color"] {
+      width: 100%;
+      height: 46px;
+      padding: 4px 6px;
+      border-radius: 10px;
+      cursor: pointer;
+      border: 1px solid #222230;
+      background: #0f0f16;
+    }
+    .color-field input[type="text"] {
+      padding: 8px 10px;
+      font-size: 12px;
+      text-align: center;
+      font-family: monospace;
+    }
+    .sizes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 12px;
+    }
+
+    /* ===== Mobile ===== */
+    @media (max-width: 600px) {
+      .row2 { grid-template-columns: 1fr; }
+      .grid  { grid-template-columns: 1fr; }
+      .wrap  { padding: 10px 10px 20px; }
+      .card  { padding: 14px; border-radius: 14px; }
+      .actions-row button { font-size: 13px; padding: 10px 12px; }
+      .page-header { padding: 10px 14px; }
+    }
   </style>
 </head>
 <body>
-<div class="wrap">
-  <h2 style="margin:0 0 6px">Личный кабинет</h2>
-  <div class="muted">Админ и сотрудники: управление экскурсиями и заявками</div>
 
-  <!-- LOGIN -->
-  <div id="loginBox" class="card">
-    <div class="err" id="err"></div>
-    <div class="row">
-      <div>
-        <label>Email</label>
-        <input id="email" placeholder="admin@guide.co.il">
-      </div>
-      <div>
-        <label>Пароль</label>
-        <input id="password" type="password">
-      </div>
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== LOGIN ===== -->
+<div id="loginBox" class="login-wrap" style="display:none">
+  <div class="login-card">
+    <div class="login-logo"></div>
+    <h2 style="text-align:center">Личный кабинет</h2>
+    <div class="muted small" style="text-align:center;margin-bottom:20px">Управление экскурсиями и заявками</div>
+    <div class="err" id="err" style="margin-bottom:8px"></div>
+    <label>Email</label>
+    <input id="email" type="email" placeholder="admin@example.com" autocomplete="email">
+    <label>Пароль</label>
+    <input id="password" type="password" autocomplete="current-password">
+    <button id="loginBtn" type="button" style="width:100%;margin-top:18px;padding:14px;font-size:16px">Войти</button>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app" style="display:none">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <div class="page-header-title" id="headerTitle">Личный кабинет</div>
+      <div class="page-header-sub" id="me"></div>
     </div>
-    <button id="loginBtn" type="button" style="margin-top:10px;width:100%">Войти</button>
-    <div class="muted small" style="margin-top:10px">Проверка API: <a href="/health" target="_blank">/health</a> · <a href="/api/me" target="_blank">/api/me</a></div>
+    <button id="logoutBtn" class="danger" style="padding:9px 16px;font-size:13px;width:auto">Выйти</button>
   </div>
 
-  <!-- APP -->
-  <div id="app" style="display:none">
-    <div class="card">
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center">
-        <div>Вы вошли как: <span class="pill" id="me"></span></div>
-        <button id="logoutBtn" class="danger">Выйти</button>
+  <div class="wrap">
+
+    <!-- ===== TOURS ===== -->
+    <div id="tab_tours" class="tab-content active">
+
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:14px" id="tourFormTitle">Новая экскурсия</div>
+
+        <label>Название экскурсии</label>
+        <input id="t_title_ru" placeholder="Например: Иерусалим за один день">
+
+        <label>Описание</label>
+        <textarea id="t_desc_ru" rows="4" placeholder="Расскажите о маршруте, что увидят гости..."></textarea>
+
+        <div class="row2">
+          <div>
+            <label>Цена (₪)</label>
+            <input id="t_price" type="number" min="0" value="0" inputmode="numeric">
+          </div>
+          <div>
+            <label>Длительность (мин)</label>
+            <input id="t_dur" type="number" min="0" value="0" inputmode="numeric">
+          </div>
+        </div>
+
+        <label>Фото (URL) — по одному в строке</label>
+        <textarea id="t_photos" rows="3" placeholder="https://example.com/photo.jpg"></textarea>
+
+        <div style="margin-top:12px">
+          <label style="margin:0;display:flex;align-items:center;gap:8px;cursor:pointer">
+            <input type="checkbox" id="t_active" checked style="width:auto;margin:0;accent-color:#4f6ef7">
+            <span style="color:#e8e8f0;font-size:14px">Показать на сайте</span>
+          </label>
+        </div>
+
+        <div class="actions-row" style="margin-top:16px">
+          <button id="createTourBtn" type="button">Опубликовать</button>
+          <button id="updateTourBtn" type="button" style="display:none" class="warn">Сохранить</button>
+          <button id="cancelEditBtn" type="button" style="display:none" class="danger">Отменить</button>
+        </div>
+        <div class="muted small" id="tourMsg" style="margin-top:8px"></div>
       </div>
 
-      <div class="tabs">
-        <div class="tab active" data-tab="tours">Посты-экскурсии</div>
-        <div class="tab" data-tab="bookings">Заявки</div>
-        <div class="tab" data-tab="stats">Статистика</div>
-        <div class="tab" data-tab="users" id="usersTab" style="display:none">Гиды/сотрудники</div>
-      </div>
-    </div>
-
-    <!-- TOURS -->
-    <div id="tab_tours" class="card">
-      <h3 style="margin:0 0 10px">Публикация поста-экскурсии</h3>
-
-      <div class="muted small">Фото: вставляй ссылки (URL) на картинки. Можно несколько.</div>
-
-      <div class="row">
-        <div>
-          <label>Название RU</label>
-          <input id="t_title_ru">
-        </div>
-        <div>
-          <label>Название HE</label>
-          <input id="t_title_he">
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>Описание RU</label>
-          <textarea id="t_desc_ru" rows="4"></textarea>
-        </div>
-        <div>
-          <label>Описание HE</label>
-          <textarea id="t_desc_he" rows="4"></textarea>
-        </div>
-      </div>
-
-      <div class="row">
-        <div>
-          <label>Цена (ILS)</label>
-          <input id="t_price" type="number" min="0" value="0">
-        </div>
-        <div>
-          <label>Длительность (мин)</label>
-          <input id="t_dur" type="number" min="0" value="0">
-        </div>
-      </div>
-
-      <label>Фото (URL) — по одному в строке</label>
-      <textarea id="t_photos" rows="4" placeholder="https://...\nhttps://..."></textarea>
-
-      <label><input type="checkbox" id="t_active" checked> Показать на сайте (не скрывать)</label>
-
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
-        <button id="createTourBtn" type="button">Опубликовать</button>
-        <button id="updateTourBtn" type="button" style="display:none" class="warn">Сохранить изменения</button>
-        <button id="cancelEditBtn" type="button" style="display:none" class="danger">Отменить редактирование</button>
-      </div>
-
-      <div class="muted" id="tourMsg" style="margin-top:10px"></div>
-
-      <hr style="border:0;border-top:1px solid #222230;margin:14px 0">
-
-      <h3 style="margin:0 0 10px">Список постов</h3>
+      <div style="font-size:17px;font-weight:800;margin:18px 0 10px">Список экскурсий</div>
       <div id="toursList" class="grid"></div>
     </div>
 
-    <!-- BOOKINGS -->
-    <div id="tab_bookings" class="card" style="display:none">
-      <h3 style="margin:0 0 10px">Заявки</h3>
-      <div class="row">
-        <div>
-          <label>Фильтр: экскурсия</label>
-          <select id="bookingTourFilter"></select>
-        </div>
-        <div>
-          <label>&nbsp;</label>
-          <button id="reloadBookingsBtn" type="button">Обновить</button>
-        </div>
+    <!-- ===== BOOKINGS ===== -->
+    <div id="tab_bookings" class="tab-content">
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:14px">Заявки клиентов</div>
+        <label>Фильтр по экскурсии</label>
+        <select id="bookingTourFilter"></select>
+        <button id="reloadBookingsBtn" type="button" style="margin-top:12px;width:100%">Обновить список</button>
       </div>
       <div id="bookingsList"></div>
     </div>
 
-    <!-- STATS -->
-    <div id="tab_stats" class="card" style="display:none">
-      <h3 style="margin:0 0 10px">Статистика по экскурсиям</h3>
+    <!-- ===== STATS ===== -->
+    <div id="tab_stats" class="tab-content">
+      <div style="font-size:17px;font-weight:800;margin:6px 0 14px">Статистика</div>
       <div id="statsList"></div>
     </div>
 
-    <!-- USERS -->
-    <div id="tab_users" class="card" style="display:none">
-      <h3 style="margin:0 0 10px">Гиды / сотрудники (только ADMIN)</h3>
+    <!-- ===== DESIGN ===== -->
+    <div id="tab_design" class="tab-content">
 
-      <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="u_email" placeholder="guide1@guide.co.il">
-        </div>
-        <div>
-          <label>Пароль (мин 6)</label>
-          <input id="u_pass" placeholder="123456">
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:14px">Текст сайта</div>
+        <label>Название (заголовок сайта)</label>
+        <input id="d_brand" placeholder="Guide Israel">
+        <label>Подзаголовок</label>
+        <input id="d_subtitle" placeholder="Экскурсии по Израилю • запись онлайн">
+        <label>Заголовок главного баннера</label>
+        <input id="d_hero_title" placeholder="Выберите экскурсию — запишитесь за 1 минуту">
+        <label>Описание главного баннера</label>
+        <input id="d_hero_desc" placeholder="После заявки мы подтверждаем запись и связываемся с вами.">
+      </div>
+
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:6px">Цвета</div>
+        <div class="muted small" style="margin-bottom:4px">Нажмите на квадрат для выбора цвета</div>
+        <div class="color-grid">
+          <div class="color-field">
+            <span>Фон страницы</span>
+            <input type="color" id="d_bg">
+            <input type="text" id="d_bg_t" placeholder="#0b0c10">
+          </div>
+          <div class="color-field">
+            <span>Фон карточек</span>
+            <input type="color" id="d_card">
+            <input type="text" id="d_card_t" placeholder="#11131a">
+          </div>
+          <div class="color-field">
+            <span>Рамки</span>
+            <input type="color" id="d_border">
+            <input type="text" id="d_border_t" placeholder="#24273a">
+          </div>
+          <div class="color-field">
+            <span>Основной текст</span>
+            <input type="color" id="d_text">
+            <input type="text" id="d_text_t" placeholder="#e9ecff">
+          </div>
+          <div class="color-field">
+            <span>Серый текст</span>
+            <input type="color" id="d_muted">
+            <input type="text" id="d_muted_t" placeholder="#a7acc7">
+          </div>
+          <div class="color-field">
+            <span>Акцент (кнопки)</span>
+            <input type="color" id="d_accent">
+            <input type="text" id="d_accent_t" placeholder="#4f6ef7">
+          </div>
+          <div class="color-field">
+            <span>Акцент 2 (градиент)</span>
+            <input type="color" id="d_accent2">
+            <input type="text" id="d_accent2_t" placeholder="#7c4dff">
+          </div>
         </div>
       </div>
 
-      <label>Роль</label>
-      <select id="u_role">
-        <option value="guide">guide</option>
-        <option value="staff">staff</option>
-        <option value="admin">admin</option>
-      </select>
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:14px">Размеры</div>
+        <div class="sizes-grid">
+          <div>
+            <label>Скругление карточек (px)</label>
+            <input type="number" id="d_radius" min="0" max="40" value="18" inputmode="numeric">
+          </div>
+          <div>
+            <label>Размер иконки/лого (px)</label>
+            <input type="number" id="d_logo" min="20" max="100" value="40" inputmode="numeric">
+          </div>
+          <div>
+            <label>Высота фото в карточке (px)</label>
+            <input type="number" id="d_imgH" min="100" max="500" value="190" inputmode="numeric">
+          </div>
+          <div>
+            <label>Высота кнопок (px)</label>
+            <input type="number" id="d_btnH" min="30" max="80" value="44" inputmode="numeric">
+          </div>
+        </div>
+      </div>
 
-      <button id="createUserBtn" type="button" style="margin-top:10px">Создать пользователя</button>
-      <div class="muted" id="userMsg" style="margin-top:10px"></div>
+      <button id="saveDesignBtn" style="width:100%;padding:16px;font-size:16px;margin:4px 0 10px">
+        Сохранить дизайн
+      </button>
+      <div class="muted small" id="designMsg" style="text-align:center;margin-bottom:16px"></div>
+    </div>
 
-      <hr style="border:0;border-top:1px solid #222230;margin:14px 0">
+    <!-- ===== USERS ===== -->
+    <div id="tab_users" class="tab-content">
+      <div class="card">
+        <div style="font-size:17px;font-weight:800;margin-bottom:14px">Создать сотрудника</div>
+        <label>Email</label>
+        <input id="u_email" type="email" placeholder="guide@example.com" autocomplete="off">
+        <label>Пароль (мин. 6 символов)</label>
+        <input id="u_pass" type="password" placeholder="••••••" autocomplete="off">
+        <label>Роль</label>
+        <select id="u_role">
+          <option value="guide">Гид</option>
+          <option value="staff">Сотрудник</option>
+          <option value="admin">Администратор</option>
+        </select>
+        <button id="createUserBtn" type="button" style="width:100%;margin-top:14px">Создать пользователя</button>
+        <div class="muted small" id="userMsg" style="margin-top:8px"></div>
+      </div>
 
-      <h3 style="margin:0 0 10px">Список пользователей</h3>
+      <div style="font-size:17px;font-weight:800;margin:18px 0 10px">Сотрудники</div>
       <div id="usersList"></div>
     </div>
+
+  </div><!-- /wrap -->
+</div><!-- /app -->
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav class="bottom-nav" id="bottomNav" style="display:none">
+  <div class="nav-item active" data-tab="tours" onclick="switchTab('tours')">
+    <span class="ni-icon">🗺️</span>
+    <span class="ni-label">Экскурсии</span>
   </div>
-</div>
+  <div class="nav-item" data-tab="bookings" onclick="switchTab('bookings')">
+    <span class="ni-icon">📋</span>
+    <span class="ni-label">Заявки</span>
+  </div>
+  <div class="nav-item" data-tab="stats" onclick="switchTab('stats')">
+    <span class="ni-icon">📊</span>
+    <span class="ni-label">Статистика</span>
+  </div>
+  <div class="nav-item" data-tab="design" onclick="switchTab('design')">
+    <span class="ni-icon">🎨</span>
+    <span class="ni-label">Дизайн</span>
+  </div>
+  <div class="nav-item" data-tab="users" id="usersNavItem" style="display:none" onclick="switchTab('users')">
+    <span class="ni-icon">👥</span>
+    <span class="ni-label">Сотрудники</span>
+  </div>
+</nav>
 
 <script>
-const el = (id)=>document.getElementById(id);
+const el = id => document.getElementById(id);
 
-async function api(url, method="GET", body){
+async function api(url, method = "GET", body) {
   const res = await fetch(url, {
     method,
-    headers: body ? {"content-type":"application/json"} : undefined,
+    headers: body ? { "content-type": "application/json" } : undefined,
     body: body ? JSON.stringify(body) : undefined
   });
-  const data = await res.json().catch(()=> ({}));
+  const data = await res.json().catch(() => ({}));
   return { ok: res.ok, data };
 }
 
 let ME = null;
 let TOURS = [];
 let EDIT_ID = null;
+let TOAST_TM = null;
 
-function setTab(name){
-  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
-  el("tab_tours").style.display = name==="tours" ? "block" : "none";
-  el("tab_bookings").style.display = name==="bookings" ? "block" : "none";
-  el("tab_stats").style.display = name==="stats" ? "block" : "none";
-  el("tab_users").style.display = name==="users" ? "block" : "none";
+// ===== Toast =====
+function showToast(msg, isErr) {
+  const t = el("toast");
+  t.textContent = msg;
+  t.classList.toggle("err-toast", !!isErr);
+  t.classList.add("show");
+  clearTimeout(TOAST_TM);
+  TOAST_TM = setTimeout(() => t.classList.remove("show"), 2800);
 }
 
-function photosFromTextarea(){
-  return el("t_photos").value
-    .split("\n")
-    .map(s => s.trim())
-    .filter(Boolean);
+// ===== Tab switching =====
+const TAB_TITLES = {
+  tours: "Экскурсии",
+  bookings: "Заявки",
+  stats: "Статистика",
+  design: "Дизайн сайта",
+  users: "Сотрудники"
+};
+
+function switchTab(name) {
+  document.querySelectorAll(".nav-item").forEach(n =>
+    n.classList.toggle("active", n.dataset.tab === name));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+  const tab = el("tab_" + name);
+  if (tab) tab.classList.add("active");
+  el("headerTitle").textContent = TAB_TITLES[name] || "Личный кабинет";
+  if (name === "bookings") loadBookings();
+  if (name === "stats") loadStats();
+  if (name === "users") loadUsers();
+  if (name === "design") loadDesign();
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function fillFormForCreate(){
+// ===== Tours =====
+function photosFromTextarea() {
+  return el("t_photos").value.split("\n").map(s => s.trim()).filter(Boolean);
+}
+
+function fillFormForCreate() {
   EDIT_ID = null;
   el("t_title_ru").value = "";
-  el("t_title_he").value = "";
   el("t_desc_ru").value = "";
-  el("t_desc_he").value = "";
   el("t_price").value = 0;
   el("t_dur").value = 0;
   el("t_photos").value = "";
   el("t_active").checked = true;
+  el("tourFormTitle").textContent = "Новая экскурсия";
   el("createTourBtn").style.display = "inline-block";
   el("updateTourBtn").style.display = "none";
   el("cancelEditBtn").style.display = "none";
   el("tourMsg").textContent = "";
 }
 
-function fillFormForEdit(t){
+function fillFormForEdit(t) {
   EDIT_ID = t.id;
   el("t_title_ru").value = t.title_ru || "";
-  el("t_title_he").value = t.title_he || "";
   el("t_desc_ru").value = t.desc_ru || "";
-  el("t_desc_he").value = t.desc_he || "";
   el("t_price").value = t.price_ils || 0;
   el("t_dur").value = t.duration_min || 0;
   el("t_photos").value = (t.photos || []).join("\n");
   el("t_active").checked = !!t.is_active;
-
+  el("tourFormTitle").textContent = "Редактирование";
   el("createTourBtn").style.display = "none";
   el("updateTourBtn").style.display = "inline-block";
   el("cancelEditBtn").style.display = "inline-block";
-  el("tourMsg").textContent = "Режим редактирования: " + t.id;
+  el("tourMsg").textContent = "";
 }
 
-async function loadTours(){
+async function loadTours() {
   const r = await api("/api/admin/tours");
   TOURS = r.ok ? r.data : [];
   renderTours();
   renderTourFilter();
 }
 
-function renderTours(){
+function renderTours() {
   const box = el("toursList");
-  if(!TOURS.length){
-    box.innerHTML = `<div class="muted">Постов пока нет. Создай первый пост выше.</div>`;
+  if (!TOURS.length) {
+    box.innerHTML = `<div class="card muted" style="text-align:center;padding:24px">Экскурсий пока нет. Создайте первую выше.</div>`;
     return;
   }
-
   box.innerHTML = TOURS.map(t => {
-    const cover = (t.photos && t.photos[0]) ? `<img src="${t.photos[0]}" alt="">` : `<div class="muted small">нет фото</div>`;
+    const cover = (t.photos && t.photos[0])
+      ? `<img class="tour-cover" src="${t.photos[0]}" alt="">`
+      : `<div class="tour-cover-empty">Нет фото</div>`;
     return `
       <div class="card" style="margin:0">
         ${cover}
-        <div style="font-weight:800;margin-top:10px">${t.title_ru || ""}</div>
-        <div class="muted small">${t.title_he || ""}</div>
-        <div class="muted" style="margin-top:6px">₪${t.price_ils || 0} · ${t.duration_min || 0} мин</div>
-        <div class="muted small" style="margin-top:6px">active: ${t.is_active}</div>
-
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
+        <div style="font-weight:800;font-size:16px;margin-top:12px">${t.title_ru || "—"}</div>
+        <div class="muted small" style="margin-top:5px">₪${t.price_ils || 0} · ${t.duration_min || 0} мин</div>
+        <div style="margin-top:6px">
+          <span class="pill" style="${t.is_active ? 'color:#00e676;border-color:#00e67630' : 'color:#ff4757;border-color:#ff475730'}">
+            ${t.is_active ? "✅ Активна" : "⛔ Скрыта"}
+          </span>
+        </div>
+        <div class="actions-row">
           <button type="button" onclick="editTour('${t.id}')">Изменить</button>
           <button type="button" class="warn" onclick="toggleTour('${t.id}')">${t.is_active ? "Скрыть" : "Показать"}</button>
           <button type="button" class="danger" onclick="deleteTour('${t.id}')">Удалить</button>
         </div>
-        <div class="muted small" style="margin-top:8px">id: ${t.id}</div>
       </div>
     `;
   }).join("");
 }
 
-function renderTourFilter(){
+function renderTourFilter() {
   const sel = el("bookingTourFilter");
-  sel.innerHTML = `<option value="">Все экскурсии</option>` + TOURS.map(t => `<option value="${t.id}">${t.title_ru}</option>`).join("");
+  sel.innerHTML = `<option value="">Все экскурсии</option>` +
+    TOURS.map(t => `<option value="${t.id}">${t.title_ru}</option>`).join("");
 }
 
-window.editTour = (id)=>{
+window.editTour = id => {
   const t = TOURS.find(x => x.id === id);
-  if(t) fillFormForEdit(t);
-  setTab("tours");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (t) { fillFormForEdit(t); switchTab("tours"); window.scrollTo({ top: 0, behavior: "smooth" }); }
 };
 
-window.toggleTour = async (id)=>{
+window.toggleTour = async id => {
   const t = TOURS.find(x => x.id === id);
-  if(!t) return;
-  const r = await api("/api/admin/tours/"+id, "PUT", { is_active: !t.is_active });
-  if(!r.ok) { alert(r.data.error || "Ошибка"); return; }
+  if (!t) return;
+  const r = await api("/api/admin/tours/" + id, "PUT", { is_active: !t.is_active });
+  if (!r.ok) { showToast(r.data.error || "Ошибка", true); return; }
   await loadTours();
+  showToast(t.is_active ? "Экскурсия скрыта" : "Экскурсия показана на сайте");
 };
 
-window.deleteTour = async (id)=>{
-  if(!confirm("Удалить пост?")) return;
-  const r = await api("/api/admin/tours/"+id, "DELETE");
-  if(!r.ok) { alert(r.data.error || "Ошибка"); return; }
-  if(EDIT_ID === id) fillFormForCreate();
+window.deleteTour = async id => {
+  if (!confirm("Удалить эту экскурсию?")) return;
+  const r = await api("/api/admin/tours/" + id, "DELETE");
+  if (!r.ok) { showToast(r.data.error || "Ошибка", true); return; }
+  if (EDIT_ID === id) fillFormForCreate();
   await loadTours();
+  showToast("Экскурсия удалена");
 };
 
-async function createTour(){
+async function createTour() {
+  const title = el("t_title_ru").value.trim();
+  if (!title) { showToast("Введите название экскурсии", true); return; }
   const body = {
-    title_ru: el("t_title_ru").value,
-    title_he: el("t_title_he").value,
+    title_ru: title,
     desc_ru: el("t_desc_ru").value,
-    desc_he: el("t_desc_he").value,
     price_ils: Number(el("t_price").value || 0),
     duration_min: Number(el("t_dur").value || 0),
     photos: photosFromTextarea(),
     is_active: el("t_active").checked
   };
   const r = await api("/api/admin/tours", "POST", body);
-  el("tourMsg").textContent = r.ok ? "Опубликовано ✅" : ("Ошибка: " + (r.data.error || ""));
-  if(r.ok){ fillFormForCreate(); await loadTours(); }
+  if (r.ok) { fillFormForCreate(); await loadTours(); showToast("✅ Экскурсия опубликована"); }
+  else showToast("Ошибка: " + (r.data.error || ""), true);
 }
 
-async function updateTour(){
-  if(!EDIT_ID) return;
+async function updateTour() {
+  if (!EDIT_ID) return;
   const body = {
     title_ru: el("t_title_ru").value,
-    title_he: el("t_title_he").value,
     desc_ru: el("t_desc_ru").value,
-    desc_he: el("t_desc_he").value,
     price_ils: Number(el("t_price").value || 0),
     duration_min: Number(el("t_dur").value || 0),
     photos: photosFromTextarea(),
     is_active: el("t_active").checked
   };
-  const r = await api("/api/admin/tours/"+EDIT_ID, "PUT", body);
-  el("tourMsg").textContent = r.ok ? "Сохранено ✅" : ("Ошибка: " + (r.data.error || ""));
-  if(r.ok){ await loadTours(); }
+  const r = await api("/api/admin/tours/" + EDIT_ID, "PUT", body);
+  if (r.ok) { await loadTours(); showToast("✅ Изменения сохранены"); }
+  else showToast("Ошибка: " + (r.data.error || ""), true);
 }
 
-async function loadBookings(){
+// ===== Bookings =====
+const STATUS_LABEL = { new: "Новая", confirmed: "Подтверждена", declined: "Отклонена", paid: "Оплачено" };
+const STATUS_COLOR = { new: "#4f6ef7", confirmed: "#00e676", declined: "#ff4757", paid: "#ff9500" };
+
+async function loadBookings() {
   const tourId = el("bookingTourFilter").value;
-  const url = tourId ? ("/api/admin/bookings?tour_id=" + encodeURIComponent(tourId)) : "/api/admin/bookings";
+  const url = tourId ? "/api/admin/bookings?tour_id=" + encodeURIComponent(tourId) : "/api/admin/bookings";
   const r = await api(url);
   const list = r.ok ? r.data : [];
   const box = el("bookingsList");
-
-  if(!list.length){
-    box.innerHTML = `<div class="muted">Заявок пока нет</div>`;
+  if (!list.length) {
+    box.innerHTML = `<div class="card muted" style="text-align:center;padding:24px">Заявок пока нет</div>`;
     return;
   }
-
-  box.innerHTML = list.map(b => `
-    <div class="card" style="margin:10px 0">
-      <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">
-        <div><b>${b.name}</b> · ${b.phone} · 👥 ${b.people} · ${b.lang}</div>
-        <div class="pill">${b.status}</div>
+  box.innerHTML = list.map(b => {
+    const sc = STATUS_COLOR[b.status] || "#4f6ef7";
+    const sl = STATUS_LABEL[b.status] || b.status;
+    const dt = b.date_iso ? new Date(b.date_iso).toLocaleString("ru", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" }) : "—";
+    return `
+      <div class="card booking-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap">
+          <div style="font-weight:800;font-size:17px">${b.name}</div>
+          <span class="status-badge" style="color:${sc};border-color:${sc}40;background:${sc}15">${sl}</span>
+        </div>
+        <div style="margin-top:10px;display:flex;flex-direction:column;gap:5px">
+          <div>📞 <a href="tel:${b.phone}" style="color:#4f6ef7;font-weight:600">${b.phone}</a></div>
+          <div class="muted small">👥 ${b.people} чел · 📅 ${dt}</div>
+          <div class="muted small">🗺️ ${b.tour ? b.tour.title_ru : b.tour_id}</div>
+          ${b.comment ? `<div class="muted small">💬 ${b.comment}</div>` : ""}
+          <div class="muted small">Заявка: ${new Date(b.created_at).toLocaleString("ru")}</div>
+        </div>
+        <div class="actions-row">
+          <button type="button" onclick="setStatus('${b.id}','confirmed')">Подтвердить</button>
+          <button type="button" class="warn" onclick="setStatus('${b.id}','declined')">Отклонить</button>
+          <button type="button" class="okbtn" onclick="setStatus('${b.id}','paid')">Оплачено</button>
+        </div>
       </div>
-      <div class="muted small" style="margin-top:6px">${new Date(b.created_at).toLocaleString()} · дата: ${b.date_iso}</div>
-      <div class="muted" style="margin-top:6px">Экскурсия: ${b.tour ? b.tour.title_ru : b.tour_id}</div>
-      <div class="muted small" style="margin-top:6px">${b.comment || ""}</div>
-
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">
-        <button type="button" onclick="setStatus('${b.id}','confirmed')">Подтвердить</button>
-        <button type="button" class="warn" onclick="setStatus('${b.id}','declined')">Отклонить</button>
-        <button type="button" class="okbtn" onclick="setStatus('${b.id}','paid')">Оплачено</button>
-      </div>
-    </div>
-  `).join("");
+    `;
+  }).join("");
 }
 
-window.setStatus = async (id, status)=>{
-  const r = await api("/api/admin/bookings/"+id+"/status", "PUT", { status });
-  if(!r.ok) { alert(r.data.error || "Ошибка"); return; }
+window.setStatus = async (id, status) => {
+  const r = await api("/api/admin/bookings/" + id + "/status", "PUT", { status });
+  if (!r.ok) { showToast(r.data.error || "Ошибка", true); return; }
   await loadBookings();
-  await loadStats();
+  showToast("Статус обновлён");
 };
 
-async function loadStats(){
+// ===== Stats =====
+async function loadStats() {
   const r = await api("/api/admin/tour-stats");
   const stats = r.ok ? r.data : [];
   const map = Object.fromEntries(stats.map(s => [s.tour_id, s]));
-
   const html = TOURS.map(t => {
     const s = map[t.id] || { bookings_count: 0, people_total: 0 };
     return `
       <div class="card" style="margin:10px 0">
-        <div style="font-weight:800">${t.title_ru}</div>
-        <div class="muted small">${t.title_he}</div>
-        <div style="margin-top:8px">Заявок: <b>${s.bookings_count}</b> · Всего людей: <b>${s.people_total}</b></div>
-        <button type="button" style="margin-top:10px" onclick="openBookingsFor('${t.id}')">Показать заявки по этой экскурсии</button>
+        <div style="font-weight:800;font-size:15px">${t.title_ru}</div>
+        <div style="margin-top:10px;display:flex;gap:16px;font-size:22px;font-weight:800">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <span>${s.bookings_count}</span>
+            <span class="muted small" style="font-size:11px;font-weight:400">заявок</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:2px">
+            <span>${s.people_total}</span>
+            <span class="muted small" style="font-size:11px;font-weight:400">человек</span>
+          </div>
+        </div>
+        <button type="button" style="margin-top:12px;width:100%" onclick="openBookingsFor('${t.id}')">
+          Показать заявки →
+        </button>
       </div>
     `;
   }).join("");
-
-  el("statsList").innerHTML = html || `<div class="muted">Нет данных</div>`;
+  el("statsList").innerHTML = html || `<div class="card muted" style="text-align:center;padding:24px">Нет данных</div>`;
 }
 
-window.openBookingsFor = async (tourId)=>{
-  setTab("bookings");
+window.openBookingsFor = async tourId => {
+  switchTab("bookings");
   el("bookingTourFilter").value = tourId;
   await loadBookings();
-  window.scrollTo({ top: 0, behavior: "smooth" });
 };
 
-// USERS
-async function loadUsers(){
-  if(ME?.role !== "admin") return;
+// ===== Design =====
+function setColorField(id, val) {
+  const col = el(id);
+  const txt = el(id + "_t");
+  if (col) col.value = val || "#000000";
+  if (txt) txt.value = val || "";
+}
+
+["d_bg","d_card","d_border","d_text","d_muted","d_accent","d_accent2"].forEach(id => {
+  const col = el(id);
+  const txt = el(id + "_t");
+  if (col && txt) {
+    col.addEventListener("input", () => { txt.value = col.value; });
+    txt.addEventListener("input", () => {
+      if (/^#[0-9a-fA-F]{6}$/.test(txt.value)) col.value = txt.value;
+    });
+  }
+});
+
+async function loadDesign() {
+  const r = await api("/api/theme");
+  const th = r.ok ? r.data : {};
+  el("d_brand").value      = th.brand_name || "";
+  el("d_subtitle").value   = th.subtitle   || "";
+  el("d_hero_title").value = th.hero_title || "";
+  el("d_hero_desc").value  = th.hero_desc  || "";
+  setColorField("d_bg",      th.bg      || "#0b0c10");
+  setColorField("d_card",    th.card    || "#11131a");
+  setColorField("d_border",  th.border  || "#24273a");
+  setColorField("d_text",    th.text    || "#e9ecff");
+  setColorField("d_muted",   th.muted   || "#a7acc7");
+  setColorField("d_accent",  th.accent  || "#4f6ef7");
+  setColorField("d_accent2", th.accent2 || "#7c4dff");
+  el("d_radius").value = th.radius        || 18;
+  el("d_logo").value   = th.logo_size     || 40;
+  el("d_imgH").value   = th.card_image_h  || 190;
+  el("d_btnH").value   = th.btn_h         || 44;
+}
+
+async function saveDesign() {
+  const body = {
+    brand_name:   el("d_brand").value,
+    subtitle:     el("d_subtitle").value,
+    hero_title:   el("d_hero_title").value,
+    hero_desc:    el("d_hero_desc").value,
+    bg:           el("d_bg").value,
+    card:         el("d_card").value,
+    border:       el("d_border").value,
+    text:         el("d_text").value,
+    muted:        el("d_muted").value,
+    accent:       el("d_accent").value,
+    accent2:      el("d_accent2").value,
+    radius:       Number(el("d_radius").value),
+    logo_size:    Number(el("d_logo").value),
+    card_image_h: Number(el("d_imgH").value),
+    btn_h:        Number(el("d_btnH").value)
+  };
+  const r = await api("/api/admin/theme", "PUT", body);
+  if (r.ok) {
+    showToast("🎨 Дизайн сохранён и применён на сайте!");
+    el("designMsg").textContent = "Изменения применены";
+  } else {
+    showToast("Ошибка сохранения", true);
+    el("designMsg").textContent = "Ошибка: " + (r.data.error || "");
+  }
+}
+
+// ===== Users =====
+async function loadUsers() {
+  if (ME?.role !== "admin") return;
   const r = await api("/api/admin/users");
   const list = r.ok ? r.data : [];
-  const box = el("usersList");
-  box.innerHTML = list.map(u => `
+  const roleLabel = { admin: "Администратор", staff: "Сотрудник", guide: "Гид" };
+  el("usersList").innerHTML = list.map(u => `
     <div class="card" style="margin:10px 0">
-      <div><b>${u.email}</b> · <span class="pill">${u.role}</span></div>
-      <div class="muted small" style="margin-top:6px">${new Date(u.created_at).toLocaleString()}</div>
-      <button type="button" class="danger" style="margin-top:10px" onclick="delUser('${u.id}')">Удалить</button>
+      <div style="font-weight:700;font-size:15px">${u.email}</div>
+      <div style="margin-top:6px">
+        <span class="pill">${roleLabel[u.role] || u.role}</span>
+      </div>
+      <div class="muted small" style="margin-top:6px">${new Date(u.created_at).toLocaleString("ru")}</div>
+      <button type="button" class="danger" style="margin-top:12px;width:100%" onclick="delUser('${u.id}')">Удалить</button>
     </div>
-  `).join("") || `<div class="muted">Пользователей нет</div>`;
+  `).join("") || `<div class="card muted" style="text-align:center;padding:24px">Пользователей нет</div>`;
 }
-window.delUser = async (id)=>{
-  if(!confirm("Удалить пользователя?")) return;
-  const r = await api("/api/admin/users/"+id, "DELETE");
-  if(!r.ok){ alert(r.data.error || "Ошибка"); return; }
+
+window.delUser = async id => {
+  if (!confirm("Удалить пользователя?")) return;
+  const r = await api("/api/admin/users/" + id, "DELETE");
+  if (!r.ok) { showToast(r.data.error || "Ошибка", true); return; }
   await loadUsers();
+  showToast("Пользователь удалён");
 };
-async function createUser(){
+
+async function createUser() {
   const body = {
-    email: el("u_email").value,
+    email:    el("u_email").value.trim(),
     password: el("u_pass").value,
-    role: el("u_role").value
+    role:     el("u_role").value
   };
   const r = await api("/api/admin/users", "POST", body);
-  el("userMsg").textContent = r.ok ? "Создано ✅" : ("Ошибка: " + (r.data.error || ""));
-  if(r.ok){ el("u_email").value=""; el("u_pass").value=""; await loadUsers(); }
+  if (r.ok) {
+    el("u_email").value = "";
+    el("u_pass").value  = "";
+    await loadUsers();
+    showToast("✅ Пользователь создан");
+    el("userMsg").textContent = "";
+  } else {
+    el("userMsg").textContent = "Ошибка: " + (r.data.error || "");
+  }
 }
 
-// Auth flow
-async function refresh(){
+// ===== Auth =====
+async function refresh() {
   const r = await api("/api/me");
   ME = r.data.user || null;
-
-  if(!ME){
-    el("loginBox").style.display = "block";
+  if (!ME) {
+    el("loginBox").style.display = "flex";
     el("app").style.display = "none";
+    el("bottomNav").style.display = "none";
     return;
   }
   el("loginBox").style.display = "none";
   el("app").style.display = "block";
-  el("me").textContent = `${ME.email} (${ME.role})`;
-
-  // show users tab only for admin
-  el("usersTab").style.display = ME.role === "admin" ? "block" : "none";
-
+  el("bottomNav").style.display = "flex";
+  const roleLabel = { admin: "Администратор", staff: "Сотрудник", guide: "Гид" };
+  el("me").textContent = ME.email + " · " + (roleLabel[ME.role] || ME.role);
+  const usersNav = el("usersNavItem");
+  if (usersNav) usersNav.style.display = ME.role === "admin" ? "flex" : "none";
   await loadTours();
   await loadStats();
   await loadBookings();
-  if(ME.role === "admin") await loadUsers();
+  if (ME.role === "admin") await loadUsers();
 }
 
-document.querySelectorAll(".tab").forEach(t => {
-  t.addEventListener("click", async ()=> {
-    setTab(t.dataset.tab);
-    if(t.dataset.tab === "bookings") await loadBookings();
-    if(t.dataset.tab === "stats") await loadStats();
-    if(t.dataset.tab === "users") await loadUsers();
-  });
-});
-
-el("loginBtn").addEventListener("click", async ()=>{
+// Event listeners
+el("loginBtn").addEventListener("click", async () => {
   el("err").textContent = "";
   const email = el("email").value.trim();
   const password = el("password").value;
+  if (!email || !password) { el("err").textContent = "Введите email и пароль"; return; }
   const r = await api("/api/login", "POST", { email, password });
-  if(!r.ok){ el("err").textContent = r.data.error || "Ошибка"; return; }
+  if (!r.ok) { el("err").textContent = r.data.error || "Ошибка входа"; return; }
   await refresh();
 });
 
-el("logoutBtn").addEventListener("click", async ()=>{
-  await api("/api/logout", "POST");
-  await refresh();
-});
-
+el("password").addEventListener("keydown", e => { if (e.key === "Enter") el("loginBtn").click(); });
+el("logoutBtn").addEventListener("click", async () => { await api("/api/logout", "POST"); await refresh(); });
 el("createTourBtn").addEventListener("click", createTour);
 el("updateTourBtn").addEventListener("click", updateTour);
 el("cancelEditBtn").addEventListener("click", fillFormForCreate);
 el("reloadBookingsBtn").addEventListener("click", loadBookings);
 el("bookingTourFilter").addEventListener("change", loadBookings);
-
 el("createUserBtn").addEventListener("click", createUser);
+el("saveDesignBtn").addEventListener("click", saveDesign);
 
 fillFormForCreate();
 refresh();
