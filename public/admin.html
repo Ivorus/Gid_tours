@@ -1,108 +1,94 @@
-<script>
-const qs = (id)=>document.getElementById(id);
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin</title>
+  <style>
+    body{font-family:system-ui,Arial;margin:0;background:#0c0c10;color:#e8e8f0}
+    .wrap{max-width:680px;margin:0 auto;padding:22px}
+    .card{background:#14141c;border:1px solid #222230;border-radius:14px;padding:16px;margin:14px 0}
+    input{width:100%;padding:10px;border-radius:10px;border:1px solid #222230;background:#0f0f16;color:#e8e8f0}
+    button{background:#4f6ef7;border:0;color:white;padding:10px 12px;border-radius:10px;cursor:pointer;width:100%}
+    .muted{color:#a6a8c0}
+    .err{color:#ff7b7b;margin-top:10px}
+    .ok{color:#00e676;margin-top:10px}
+    a{color:#a6a8c0}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h2 style="margin:0 0 8px">Админ-панель</h2>
+    <div class="muted">Вход для админа и сотрудников</div>
 
-async function api(url, method="GET", body){
-  const res = await fetch(url, {
-    method,
-    headers: body ? {"content-type":"application/json"} : undefined,
-    body: body ? JSON.stringify(body) : undefined
-  });
-  const data = await res.json().catch(()=> ({}));
-  return { ok: res.ok, data };
-}
+    <div class="card">
+      <div class="muted" style="margin-bottom:8px">URL сервера: <span id="base"></span></div>
 
-async function refresh(){
-  const me = await api("/api/me");
-  if(!me.data.user){
-    qs("loginBox").style.display="block";
-    qs("app").style.display="none";
-    return;
-  }
-  qs("loginBox").style.display="none";
-  qs("app").style.display="block";
-  qs("me").textContent = `${me.data.user.email} (${me.data.user.role})`;
-  qs("staffBox").style.display = (me.data.user.role==="admin") ? "block" : "none";
+      <label>Email</label>
+      <input id="email" placeholder="admin@guide.co.il"/>
 
-  const tours = await api("/api/admin/tours");
-  qs("tours").innerHTML = (tours.data || []).map(t=>`
-    <div style="padding:10px;border:1px solid #222230;border-radius:12px;margin:8px 0">
-      <b>${t.title_ru}</b> / ${t.title_he}
-      <div class="muted">₪${t.price_ils} · ${t.duration_min} мин · active: ${t.is_active}</div>
-      <div class="muted">id: ${t.id}</div>
-      <button onclick="delTour('${t.id}')" style="margin-top:8px;background:#ff4757">Удалить</button>
-    </div>
-  `).join("") || "пусто";
+      <label style="margin-top:10px">Пароль</label>
+      <input id="password" type="password" placeholder="••••••••"/>
 
-  const bookings = await api("/api/admin/bookings");
-  qs("bookings").innerHTML = (bookings.data || []).map(b=>`
-    <div style="padding:10px;border:1px solid #222230;border-radius:12px;margin:8px 0">
-      <b>${b.name}</b> · ${b.phone} · 👥 ${b.people} · ${b.lang}
-      <div class="muted">${new Date(b.created_at).toLocaleString()} · дата: ${b.date_iso}</div>
-      <div class="muted">Экскурсия: ${b.tour ? b.tour.title_ru : b.tour_id}</div>
-      <div class="muted">Статус: <span class="pill">${b.status}</span></div>
-      <div style="margin-top:8px">
-        <button onclick="setStatus('${b.id}','confirmed')">Подтвердить</button>
-        <button onclick="setStatus('${b.id}','declined')" style="background:#ff9500">Отклонить</button>
-        <button onclick="setStatus('${b.id}','paid')" style="background:#00e676;color:#0c0c10">Оплачено</button>
+      <button id="loginBtn" type="button" style="margin-top:12px">Войти</button>
+
+      <div id="msg" class="err"></div>
+      <div class="muted" style="margin-top:10px">
+        Проверка: <a href="/api/me" target="_blank">/api/me</a> · <a href="/health" target="_blank">/health</a>
       </div>
     </div>
-  `).join("") || "пока заявок нет";
-}
 
-async function setStatus(id, status){
-  await api("/api/admin/bookings/"+id+"/status","PUT",{status});
-  refresh();
-}
-async function delTour(id){
-  await api("/api/admin/tours/"+id,"DELETE");
-  refresh();
-}
-window.setStatus = setStatus;
-window.delTour = delTour;
+    <div id="after" class="card" style="display:none">
+      <div class="ok">✅ Вы вошли!</div>
+      <div class="muted" id="me"></div>
+      <button id="logoutBtn" type="button" style="margin-top:12px;background:#ff4757">Выйти</button>
+    </div>
+  </div>
 
-window.addEventListener("DOMContentLoaded", () => {
-  qs("login").addEventListener("click", async () => {
-    qs("err").textContent="";
-    const r = await api("/api/login","POST",{
-      email: qs("email").value,
-      password: qs("password").value
+<script>
+  const base = location.origin;
+  document.getElementById("base").textContent = base;
+
+  async function api(url, method="GET", body){
+    const res = await fetch(url, {
+      method,
+      headers: body ? {"content-type":"application/json"} : undefined,
+      body: body ? JSON.stringify(body) : undefined
     });
-    if(!r.ok){ qs("err").textContent = r.data.error || "Ошибка"; return; }
-    refresh();
+    const data = await res.json().catch(()=> ({}));
+    return { ok: res.ok, data };
+  }
+
+  async function refresh(){
+    const me = await api("/api/me");
+    if(me.data && me.data.user){
+      document.getElementById("after").style.display = "block";
+      document.getElementById("me").textContent = me.data.user.email + " (" + me.data.user.role + ")";
+    } else {
+      document.getElementById("after").style.display = "none";
+    }
+  }
+
+  document.getElementById("loginBtn").addEventListener("click", async () => {
+    document.getElementById("msg").textContent = "";
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value;
+
+    const r = await api("/api/login","POST",{ email, password });
+    if(!r.ok){
+      document.getElementById("msg").textContent = r.data.error || "Ошибка входа";
+      return;
+    }
+    await refresh();
+    document.getElementById("msg").textContent = "";
   });
 
-  qs("logout").addEventListener("click", async () => {
+  document.getElementById("logoutBtn").addEventListener("click", async () => {
     await api("/api/logout","POST");
-    refresh();
-  });
-
-  qs("addTour").addEventListener("click", async () => {
-    qs("tourRes").textContent="";
-    const body = {
-      title_ru: qs("tr").value, title_he: qs("th").value,
-      desc_ru: qs("dr").value, desc_he: qs("dh").value,
-      price_ils: Number(qs("price").value||0),
-      duration_min: Number(qs("dur").value||0),
-      image_url: qs("img").value,
-      is_active: qs("active").checked
-    };
-    const r = await api("/api/admin/tours","POST",body);
-    qs("tourRes").textContent = r.ok ? "Сохранено" : ("Ошибка: "+(r.data.error||""));
-    if(r.ok){ qs("tr").value=""; qs("th").value=""; qs("dr").value=""; qs("dh").value=""; qs("img").value=""; }
-    refresh();
-  });
-
-  qs("createStaff")?.addEventListener("click", async () => {
-    qs("staffRes").textContent="";
-    const r = await api("/api/admin/users","POST",{
-      email: qs("sEmail").value,
-      password: qs("sPass").value,
-      role: qs("sRole").value
-    });
-    qs("staffRes").textContent = r.ok ? "Сотрудник создан" : ("Ошибка: "+(r.data.error||""));
-    if(r.ok){ qs("sEmail").value=""; qs("sPass").value=""; }
+    await refresh();
   });
 
   refresh();
-});
 </script>
+</body>
+</html>
