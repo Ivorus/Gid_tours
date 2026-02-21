@@ -5,7 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 const app = express();
-app.use(express.json({ limit: "2mb" }));
+app.use(express.json({ limit: "5mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ====== Config ======
@@ -14,7 +14,6 @@ const SESSION_SECRET = process.env.SESSION_SECRET || "change_me_please";
 const ADMIN_EMAIL = (process.env.ADMIN_EMAIL || "admin@example.com").toLowerCase();
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "Admin12345!";
 
-// Storage (simple JSON DB)
 const DB_PATH = path.join(__dirname, "db.json");
 
 function ensureDB() {
@@ -23,18 +22,26 @@ function ensureDB() {
     fs.writeFileSync(DB_PATH, JSON.stringify(init, null, 2), "utf8");
   }
 }
-
 function readDB() {
   ensureDB();
   return JSON.parse(fs.readFileSync(DB_PATH, "utf8"));
 }
-
 function writeDB(db) {
   fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2), "utf8");
 }
-
 function uid(prefix = "id") {
   return `${prefix}_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+}
+function normalizeTour(t) {
+  // backward compatibility: image_url -> photos[]
+  if (!Array.isArray(t.photos)) t.photos = [];
+  if (t.image_url && !t.photos.includes(t.image_url)) t.photos.unshift(t.image_url);
+  delete t.image_url;
+  // defaults
+  if (typeof t.is_active !== "boolean") t.is_active = true;
+  if (!t.created_at) t.created_at = new Date().toISOString();
+  if (!t.updated_at) t.updated_at = t.created_at;
+  return t;
 }
 
 // ====== Session ======
@@ -50,6 +57,11 @@ app.use(
 // ====== Seed admin user if not exists ======
 (function seedAdmin() {
   const db = readDB();
+
+  // normalize tours for old db versions
+  db.tours = (db.tours || []).map(normalizeTour);
+  writeDB(db);
+
   const exists = db.users.find(u => u.email === ADMIN_EMAIL);
   if (!exists) {
     const hash = bcrypt.hashSync(ADMIN_PASSWORD, 10);
@@ -57,7 +69,7 @@ app.use(
       id: uid("user"),
       email: ADMIN_EMAIL,
       pass_hash: hash,
-      role: "admin", // admin | staff
+      role: "admin", // admin | staff | guide
       created_at: new Date().toISOString()
     });
     writeDB(db);
@@ -106,12 +118,13 @@ app.get("/api/me", (req, res) => {
 // ====== Tours (public) ======
 app.get("/api/tours", (req, res) => {
   const db = readDB();
-  res.json(db.tours.filter(t => t.is_active));
+  const tours = (db.tours || []).map(normalizeTour).filter(t => t.is_active);
+  res.json(tours);
 });
 
 app.get("/api/tours/:id", (req, res) => {
   const db = readDB();
-  const tour = db.tours.find(t => t.id === req.params.id);
+  const tour = (db.tours || []).map(normalizeTour).find(t => t.id === req.params.id);
   if (!tour) return res.status(404).json({ error: "Not found" });
   res.json(tour);
 });
@@ -125,7 +138,7 @@ app.post("/api/bookings", (req, res) => {
     return res.status(400).json({ error: "Заполни: экскурсия, имя, телефон, дата" });
   }
 
-  const tour = db.tours.find(t => t.id === tour_id && t.is_active);
+  const tour = (db.tours || []).map(normalizeTour).find(t => t.id === tour_id && t.is_active);
   if (!tour) return res.status(400).json({ error: "Экскурсия не найдена" });
 
   const booking = {
@@ -141,15 +154,17 @@ app.post("/api/bookings", (req, res) => {
     created_at: new Date().toISOString()
   };
 
+  db.bookings = db.bookings || [];
   db.bookings.unshift(booking);
   writeDB(db);
   res.json({ ok: true, booking });
 });
 
-// ====== Admin: tours CRUD ======
+// ====== Admin: tours CRUD (posts) ======
 app.get("/api/admin/tours", requireLogin, (req, res) => {
   const db = readDB();
-  res.json(db.tours);
+  const tours = (db.tours || []).map(normalizeTour);
+  res.json(tours);
 });
 
 app.post("/api/admin/tours", requireLogin, (req, res) => {
@@ -158,13 +173,13 @@ app.post("/api/admin/tours", requireLogin, (req, res) => {
     title_ru, title_he,
     desc_ru, desc_he,
     price_ils, duration_min,
-    image_url,
+    photos,
     is_active
   } = req.body || {};
 
   if (!title_ru || !title_he) return res.status(400).json({ error: "Нужно название RU и HE" });
 
-  const tour = {
+  const tour = normalizeTour({
     id: uid("tour"),
     title_ru: String(title_ru).trim(),
     title_he: String(title_he).trim(),
@@ -172,11 +187,13 @@ app.post("/api/admin/tours", requireLogin, (req, res) => {
     desc_he: String(desc_he || "").trim(),
     price_ils: Number(price_ils || 0),
     duration_min: Number(duration_min || 0),
-    image_url: String(image_url || "").trim(),
+    photos: Array.isArray(photos) ? photos.map(String).map(s => s.trim()).filter(Boolean) : [],
     is_active: Boolean(is_active ?? true),
-    created_at: new Date().toISOString()
-  };
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString()
+  });
 
+  db.tours = db.tours || [];
   db.tours.unshift(tour);
   writeDB(db);
   res.json({ ok: true, tour });
@@ -184,35 +201,49 @@ app.post("/api/admin/tours", requireLogin, (req, res) => {
 
 app.put("/api/admin/tours/:id", requireLogin, (req, res) => {
   const db = readDB();
+  db.tours = (db.tours || []).map(normalizeTour);
+
   const tour = db.tours.find(t => t.id === req.params.id);
   if (!tour) return res.status(404).json({ error: "Not found" });
 
   const patch = req.body || {};
-  const fields = ["title_ru","title_he","desc_ru","desc_he","price_ils","duration_min","image_url","is_active"];
+  const fields = ["title_ru","title_he","desc_ru","desc_he","price_ils","duration_min","is_active"];
+
   for (const f of fields) {
     if (patch[f] !== undefined) tour[f] = patch[f];
   }
+  if (patch.photos !== undefined) {
+    if (!Array.isArray(patch.photos)) return res.status(400).json({ error: "photos must be array" });
+    tour.photos = patch.photos.map(String).map(s => s.trim()).filter(Boolean);
+  }
 
+  tour.updated_at = new Date().toISOString();
   writeDB(db);
   res.json({ ok: true, tour });
 });
 
 app.delete("/api/admin/tours/:id", requireLogin, (req, res) => {
   const db = readDB();
-  db.tours = db.tours.filter(t => t.id !== req.params.id);
+  db.tours = (db.tours || []).filter(t => t.id !== req.params.id);
   writeDB(db);
   res.json({ ok: true });
 });
 
-// ====== Admin: bookings ======
+// ====== Admin: bookings with counts ======
 app.get("/api/admin/bookings", requireLogin, (req, res) => {
   const db = readDB();
-  const toursById = Object.fromEntries(db.tours.map(t => [t.id, t]));
-  res.json(db.bookings.map(b => ({ ...b, tour: toursById[b.tour_id] || null })));
+  const tourId = String(req.query.tour_id || "").trim();
+  const toursById = Object.fromEntries((db.tours || []).map(normalizeTour).map(t => [t.id, t]));
+
+  let bookings = db.bookings || [];
+  if (tourId) bookings = bookings.filter(b => b.tour_id === tourId);
+
+  res.json(bookings.map(b => ({ ...b, tour: toursById[b.tour_id] || null })));
 });
 
 app.put("/api/admin/bookings/:id/status", requireLogin, (req, res) => {
   const db = readDB();
+  db.bookings = db.bookings || [];
   const booking = db.bookings.find(b => b.id === req.params.id);
   if (!booking) return res.status(404).json({ error: "Not found" });
 
@@ -225,20 +256,46 @@ app.put("/api/admin/bookings/:id/status", requireLogin, (req, res) => {
   res.json({ ok: true, booking });
 });
 
-// ====== Admin ONLY: create staff users ======
+// counts per tour
+app.get("/api/admin/tour-stats", requireLogin, (req, res) => {
+  const db = readDB();
+  const tours = (db.tours || []).map(normalizeTour);
+
+  const bookings = db.bookings || [];
+  const stats = tours.map(t => {
+    const list = bookings.filter(b => b.tour_id === t.id);
+    const total_people = list.reduce((sum, b) => sum + Number(b.people || 0), 0);
+    return {
+      tour_id: t.id,
+      bookings_count: list.length,
+      people_total: total_people
+    };
+  });
+  res.json(stats);
+});
+
+// ====== Admin: users (guides/staff) ======
+app.get("/api/admin/users", requireAdmin, (req, res) => {
+  const db = readDB();
+  const safe = (db.users || []).map(u => ({ id: u.id, email: u.email, role: u.role, created_at: u.created_at }));
+  res.json(safe);
+});
+
 app.post("/api/admin/users", requireAdmin, (req, res) => {
   const db = readDB();
   const email = String(req.body.email || "").trim().toLowerCase();
   const password = String(req.body.password || "");
-  const role = (req.body.role === "admin") ? "admin" : "staff";
+  const roleRaw = String(req.body.role || "guide");
+  const role = ["admin","staff","guide"].includes(roleRaw) ? roleRaw : "guide";
 
   if (!email || password.length < 6) {
     return res.status(400).json({ error: "Нужен email и пароль (мин 6 символов)" });
   }
-  if (db.users.some(u => u.email === email)) {
+  if ((db.users || []).some(u => u.email === email)) {
     return res.status(400).json({ error: "Такой пользователь уже есть" });
   }
 
+  db.users = db.users || [];
   db.users.push({
     id: uid("user"),
     email,
@@ -247,7 +304,14 @@ app.post("/api/admin/users", requireAdmin, (req, res) => {
     created_at: new Date().toISOString()
   });
   writeDB(db);
+  res.json({ ok: true });
+});
 
+app.delete("/api/admin/users/:id", requireAdmin, (req, res) => {
+  const db = readDB();
+  const id = req.params.id;
+  db.users = (db.users || []).filter(u => u.id !== id);
+  writeDB(db);
   res.json({ ok: true });
 });
 
