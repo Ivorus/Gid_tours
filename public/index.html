@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Экскурсии по Израилю</title>
+  <style>
+    body{font-family:system-ui,Arial;margin:0;background:#0c0c10;color:#e8e8f0}
+    header{padding:16px 18px;border-bottom:1px solid #222230;display:flex;gap:12px;align-items:center;justify-content:space-between}
+    .wrap{max-width:980px;margin:0 auto;padding:18px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    .card{background:#14141c;border:1px solid #222230;border-radius:14px;padding:14px}
+    .muted{color:#a6a8c0}
+    button{background:#4f6ef7;border:0;color:white;padding:10px 12px;border-radius:10px;cursor:pointer}
+    input,select,textarea{width:100%;padding:10px;border-radius:10px;border:1px solid #222230;background:#0f0f16;color:#e8e8f0}
+    label{display:block;margin:10px 0 6px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .rtl{direction:rtl;text-align:right}
+    .pill{border:1px solid #222230;background:#0f0f16;border-radius:999px;padding:6px 10px;cursor:pointer}
+    .error{color:#ff7b7b;margin-top:10px}
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <div style="font-weight:800">Israel Guide</div>
+    <div class="muted" id="subtitle">Экскурсии и запись</div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center">
+    <span class="pill" id="btnRU">RU</span>
+    <span class="pill" id="btnHE">HE</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div id="topError" class="error"></div>
+  <div id="list" class="grid"></div>
+
+  <div id="booking" class="card" style="margin-top:14px; display:none">
+    <div style="display:flex;justify-content:space-between;gap:10px;align-items:start">
+      <div>
+        <div id="tourTitle" style="font-size:18px;font-weight:800"></div>
+        <div id="tourDesc" class="muted" style="margin-top:6px"></div>
+      </div>
+      <button id="close">✕</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <label id="lblSlot">Дата</label>
+      <select id="slot"></select>
+
+      <label id="lblName">Имя и фамилия</label>
+      <input id="name" placeholder="Например: Василий Иванов"/>
+
+      <label id="lblPhone">Телефон (WhatsApp)</label>
+      <input id="phone" placeholder="+972..."/>
+
+      <div class="row">
+        <div>
+          <label id="lblAdults">Взрослые</label>
+          <input id="adults" type="number" min="1" value="1"/>
+        </div>
+        <div>
+          <label id="lblKids">Дети</label>
+          <input id="kids" type="number" min="0" value="0"/>
+        </div>
+      </div>
+
+      <label id="lblLang">Язык экскурсии</label>
+      <select id="prefLang">
+        <option value="RU">RU</option>
+        <option value="HE">HE</option>
+      </select>
+
+      <label id="lblComment">Комментарий</label>
+      <textarea id="comment" rows="3"></textarea>
+
+      <button id="send" style="margin-top:12px; width:100%">Записаться</button>
+
+      <div id="result" class="muted" style="margin-top:10px"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ✅ Умный BASE: если сайт открыт в /GID/public/ — BASE станет /GID
+  // если открыт в корне — BASE будет ""
+  function detectBase() {
+    const p = location.pathname;
+    const m = p.match(/^\/([^\/]+)\/public\/?/); // /GID/public/...
+    return m ? "/" + m[1] : "";
+  }
+  const BASE = detectBase();
+
+  const API = (path) => BASE + path;
+
+  let LANG = "RU";
+  let tours = [];
+  let slots = [];
+
+  const t = {
+    RU: {
+      subtitle: "Экскурсии и запись",
+      date: "Дата",
+      name: "Имя и фамилия",
+      phone: "Телефон (WhatsApp)",
+      adults: "Взрослые",
+      kids: "Дети",
+      lang: "Язык экскурсии",
+      comment: "Комментарий",
+      book: "Записаться",
+      sent: "Заявка отправлена! Статус: ожидает подтверждения.",
+      pick: "Выберите дату",
+      noTours: "Пока нет экскурсий или не работает сервер (API)."
+    },
+    HE: {
+      subtitle: "סיורים והרשמה",
+      date: "תאריך",
+      name: "שם מלא",
+      phone: "טלפון (WhatsApp)",
+      adults: "מבוגרים",
+      kids: "ילדים",
+      lang: "שפת הסיור",
+      comment: "הערה",
+      book: "להירשם",
+      sent: "הבקשה נשלחה! סטטוס: ממתין לאישור.",
+      pick: "בחרו תאריך",
+      noTours: "אין סיורים כרגע או שהשרת (API) לא עובד."
+    }
+  };
+
+  function applyLang() {
+    document.getElementById("subtitle").textContent = t[LANG].subtitle;
+    document.getElementById("lblSlot").textContent = t[LANG].date;
+    document.getElementById("lblName").textContent = t[LANG].name;
+    document.getElementById("lblPhone").textContent = t[LANG].phone;
+    document.getElementById("lblAdults").textContent = t[LANG].adults;
+    document.getElementById("lblKids").textContent = t[LANG].kids;
+    document.getElementById("lblLang").textContent = t[LANG].lang;
+    document.getElementById("lblComment").textContent = t[LANG].comment;
+    document.getElementById("send").textContent = t[LANG].book;
+
+    document.body.classList.toggle("rtl", LANG === "HE");
+    document.documentElement.lang = (LANG === "HE") ? "he" : "ru";
+  }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleString(LANG === "HE" ? "he-IL" : "ru-RU", { dateStyle: "medium", timeStyle: "short" });
+  }
+
+  function renderList() {
+    const el = document.getElementById("list");
+    if (!tours.length) {
+      el.innerHTML = `<div class="card muted">${t[LANG].noTours}<br/><br/>
+      Проверка: <code>${API("/api/tours")}</code></div>`;
+      return;
+    }
+    el.innerHTML = tours.map(tour => `
+      <div class="card">
+        <div style="font-weight:800;font-size:16px">${LANG==="HE" ? tour.title_he : tour.title_ru}</div>
+        <div class="muted" style="margin-top:6px">${LANG==="HE" ? tour.desc_he : tour.desc_ru}</div>
+        <div class="muted" style="margin-top:10px">₪${tour.base_price} · ${Math.round(tour.duration_minutes/60)}ч</div>
+        <button style="margin-top:12px" onclick="openBooking('${tour.id}')">${t[LANG].book}</button>
+      </div>
+    `).join("");
+  }
+
+  async function load() {
+    try {
+      const toursRes = await fetch(API("/api/tours"));
+      if (!toursRes.ok) throw new Error("API /api/tours not available");
+      tours = await toursRes.json();
+
+      const slotsRes = await fetch(API("/api/slots"));
+      if (!slotsRes.ok) throw new Error("API /api/slots not available");
+      slots = await slotsRes.json();
+
+      document.getElementById("topError").textContent = "";
+      renderList();
+    } catch (e) {
+      document.getElementById("topError").textContent =
+        "Не найден backend (API). Открой в браузере: " + API("/api/health") + " и проверь, что там JSON.";
+      tours = [];
+      slots = [];
+      renderList();
+    }
+  }
+
+  window.openBooking = function(tourId) {
+    const tour = tours.find(x => x.id === tourId);
+    const s = slots.filter(x => x.tour_id === tourId);
+
+    document.getElementById("tourTitle").textContent = (LANG==="HE" ? tour.title_he : tour.title_ru);
+    document.getElementById("tourDesc").textContent = (LANG==="HE" ? tour.desc_he : tour.desc_ru);
+
+    const slotSel = document.getElementById("slot");
+    slotSel.innerHTML = `<option value="">${t[LANG].pick}</option>` + s.map(x => {
+      const mp = (LANG==="HE" ? x.meeting_point_he : x.meeting_point_ru);
+      return `<option value="${x.id}">${fmtDate(x.start_iso)} · ${mp} · ${x.capacity - x.booked_count} мест</option>`;
+    }).join("");
+
+    document.getElementById("result").textContent = "";
+    document.getElementById("booking").style.display = "block";
+    document.getElementById("booking").dataset.tourId = tourId;
+  };
+
+  document.getElementById("close").onclick = () => {
+    document.getElementById("booking").style.display = "none";
+  };
+
+  document.getElementById("send").onclick = async () => {
+    const tour_id = document.getElementById("booking").dataset.tourId;
+    const slot_id = document.getElementById("slot").value;
+    const name = document.getElementById("name").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+
+    const payload = {
+      tour_id,
+      slot_id,
+      name,
+      phone,
+      adults: document.getElementById("adults").value,
+      kids: document.getElementById("kids").value,
+      preferred_language: document.getElementById("prefLang").value,
+      comment: document.getElementById("comment").value
+    };
+
+    const res = await fetch(API("/api/bookings"), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+    if (!res.ok) {
+      document.getElementById("result").textContent = "Ошибка: " + (data.error || "unknown");
+      return;
+    }
+    document.getElementById("result").textContent = t[LANG].sent + " № " + data.booking.id;
+  };
+
+  document.getElementById("btnRU").onclick = () => { LANG="RU"; applyLang(); renderList(); };
+  document.getElementById("btnHE").onclick = () => { LANG="HE"; applyLang(); renderList(); };
+
+  applyLang();
+  load();
+</script>
+</body>
+</html>
