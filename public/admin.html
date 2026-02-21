@@ -1,113 +1,3 @@
-<!doctype html>
-<html lang="ru">
-<head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Admin</title>
-  <style>
-    body{font-family:system-ui,Arial;margin:0;background:#0c0c10;color:#e8e8f0}
-    .wrap{max-width:980px;margin:0 auto;padding:18px}
-    .card{background:#14141c;border:1px solid #222230;border-radius:14px;padding:14px;margin:12px 0}
-    input,textarea,select{width:100%;padding:10px;border-radius:10px;border:1px solid #222230;background:#0f0f16;color:#e8e8f0}
-    button{background:#4f6ef7;border:0;color:white;padding:10px 12px;border-radius:10px;cursor:pointer}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .muted{color:#a6a8c0}
-    .err{color:#ff7b7b}
-    .pill{display:inline-block;border:1px solid #222230;border-radius:999px;padding:4px 10px;background:#0f0f16}
-  </style>
-</head>
-<body>
-<div class="wrap">
-  <h2 style="margin:0 0 8px">Админ-панель</h2>
-  <div class="muted">Вход для админа и сотрудников</div>
-
-  <div id="loginBox" class="card">
-    <div class="err" id="err"></div>
-    <label>Email</label>
-    <input id="email" placeholder="admin@example.com">
-    <label>Пароль</label>
-    <input id="password" type="password">
-    <button id="login" style="margin-top:10px;width:100%">Войти</button>
-  </div>
-
-  <div id="app" style="display:none">
-    <div class="card">
-      <div>Вы вошли как: <span class="pill" id="me"></span></div>
-      <button id="logout" style="margin-top:10px">Выйти</button>
-    </div>
-
-    <div class="card" id="staffBox" style="display:none">
-      <h3 style="margin:0 0 8px">Создать сотрудника (только ADMIN)</h3>
-      <div class="row">
-        <div>
-          <label>Email</label>
-          <input id="sEmail">
-        </div>
-        <div>
-          <label>Пароль</label>
-          <input id="sPass">
-        </div>
-      </div>
-      <label>Роль</label>
-      <select id="sRole">
-        <option value="staff">staff</option>
-        <option value="admin">admin</option>
-      </select>
-      <button id="createStaff" style="margin-top:10px">Создать</button>
-      <div class="muted" id="staffRes"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin:0 0 8px">Добавить экскурсию</h3>
-      <div class="row">
-        <div>
-          <label>Название RU</label>
-          <input id="tr">
-        </div>
-        <div>
-          <label>Название HE</label>
-          <input id="th">
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Описание RU</label>
-          <textarea id="dr" rows="3"></textarea>
-        </div>
-        <div>
-          <label>Описание HE</label>
-          <textarea id="dh" rows="3"></textarea>
-        </div>
-      </div>
-      <div class="row">
-        <div>
-          <label>Цена (ILS)</label>
-          <input id="price" type="number" min="0" value="0">
-        </div>
-        <div>
-          <label>Длительность (мин)</label>
-          <input id="dur" type="number" min="0" value="0">
-        </div>
-      </div>
-      <label>Ссылка на картинку (image_url)</label>
-      <input id="img" placeholder="https://...jpg / png / webp">
-      <label><input type="checkbox" id="active" checked> Активна</label>
-      <button id="addTour" style="margin-top:10px;width:100%">Сохранить</button>
-      <div class="muted" id="tourRes"></div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin:0 0 8px">Экскурсии</h3>
-      <div id="tours" class="muted">загрузка...</div>
-    </div>
-
-    <div class="card">
-      <h3 style="margin:0 0 8px">Заявки</h3>
-      <div id="bookings" class="muted">загрузка...</div>
-    </div>
-  </div>
-</div>
-
 <script>
 const qs = (id)=>document.getElementById(id);
 
@@ -150,4 +40,69 @@ async function refresh(){
       <div class="muted">${new Date(b.created_at).toLocaleString()} · дата: ${b.date_iso}</div>
       <div class="muted">Экскурсия: ${b.tour ? b.tour.title_ru : b.tour_id}</div>
       <div class="muted">Статус: <span class="pill">${b.status}</span></div>
-      <div st
+      <div style="margin-top:8px">
+        <button onclick="setStatus('${b.id}','confirmed')">Подтвердить</button>
+        <button onclick="setStatus('${b.id}','declined')" style="background:#ff9500">Отклонить</button>
+        <button onclick="setStatus('${b.id}','paid')" style="background:#00e676;color:#0c0c10">Оплачено</button>
+      </div>
+    </div>
+  `).join("") || "пока заявок нет";
+}
+
+async function setStatus(id, status){
+  await api("/api/admin/bookings/"+id+"/status","PUT",{status});
+  refresh();
+}
+async function delTour(id){
+  await api("/api/admin/tours/"+id,"DELETE");
+  refresh();
+}
+window.setStatus = setStatus;
+window.delTour = delTour;
+
+window.addEventListener("DOMContentLoaded", () => {
+  qs("login").addEventListener("click", async () => {
+    qs("err").textContent="";
+    const r = await api("/api/login","POST",{
+      email: qs("email").value,
+      password: qs("password").value
+    });
+    if(!r.ok){ qs("err").textContent = r.data.error || "Ошибка"; return; }
+    refresh();
+  });
+
+  qs("logout").addEventListener("click", async () => {
+    await api("/api/logout","POST");
+    refresh();
+  });
+
+  qs("addTour").addEventListener("click", async () => {
+    qs("tourRes").textContent="";
+    const body = {
+      title_ru: qs("tr").value, title_he: qs("th").value,
+      desc_ru: qs("dr").value, desc_he: qs("dh").value,
+      price_ils: Number(qs("price").value||0),
+      duration_min: Number(qs("dur").value||0),
+      image_url: qs("img").value,
+      is_active: qs("active").checked
+    };
+    const r = await api("/api/admin/tours","POST",body);
+    qs("tourRes").textContent = r.ok ? "Сохранено" : ("Ошибка: "+(r.data.error||""));
+    if(r.ok){ qs("tr").value=""; qs("th").value=""; qs("dr").value=""; qs("dh").value=""; qs("img").value=""; }
+    refresh();
+  });
+
+  qs("createStaff")?.addEventListener("click", async () => {
+    qs("staffRes").textContent="";
+    const r = await api("/api/admin/users","POST",{
+      email: qs("sEmail").value,
+      password: qs("sPass").value,
+      role: qs("sRole").value
+    });
+    qs("staffRes").textContent = r.ok ? "Сотрудник создан" : ("Ошибка: "+(r.data.error||""));
+    if(r.ok){ qs("sEmail").value=""; qs("sPass").value=""; }
+  });
+
+  refresh();
+});
+</script>
